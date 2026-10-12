@@ -56,7 +56,7 @@ final class GhPublisher implements Publisher {
       if (isDraft != true) {
         throw StateError(
           'Release $tag of $repository is published already. Its files are '
-          'final (ADR 005 R6). Restore the manifest that refers to it.',
+          'final (ADR 001 R6). Restore the manifest that refers to it.',
         );
       }
       log?.call('Deleting draft release $tag from an earlier run');

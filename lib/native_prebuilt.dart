@@ -1,4 +1,4 @@
-/// Prebuilt native libraries for build hooks (fllama ADR 005).
+/// Prebuilt native libraries for build hooks (ADR 001).
 library;
 
 export 'src/cache.dart' show defaultCacheRoot;

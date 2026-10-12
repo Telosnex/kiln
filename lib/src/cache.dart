@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-/// The shared cache of ADR 005 D9: `<user cache>/native_prebuilt`.
+/// The shared cache of ADR 001 D9: `<user cache>/native_prebuilt`.
 ///
 /// Build hooks see only the environment variables that hooks_runner passes
 /// through (HOME, USERPROFILE, LOCALAPPDATA, ...). XDG_CACHE_HOME is not one

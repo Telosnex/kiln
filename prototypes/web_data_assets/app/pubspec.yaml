@@ -1,0 +1,9 @@
+name: web_data_assets_probe
+publish_to: none
+environment:
+  sdk: ^3.10.0
+dependencies:
+  flutter:
+    sdk: flutter
+  web_payload_probe:
+    path: ../payload

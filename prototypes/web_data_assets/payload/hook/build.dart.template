@@ -1,0 +1,37 @@
+import 'dart:io';
+import 'package:data_assets/data_assets.dart';
+import 'package:hooks/hooks.dart';
+
+// No flutter.assets declarations and no generated files in lib/.
+void main(List<String> args) async {
+  await build(args, (input, output) async {
+    stderr.writeln(
+      '[web-payload-probe] buildDataAssets=${input.config.buildDataAssets}',
+    );
+    if (!input.config.buildDataAssets) return;
+    for (final package in ['image_ffmpeg', 'zxing_dart']) {
+      for (final suffix in [
+        'worker.mjs',
+        'loader.mjs',
+        'module.mjs',
+        'module.wasm',
+      ]) {
+        // An offline stand-in for a verified release download. Inputs live
+        // outside this dependency; only the hook makes them available to Flutter.
+        final source = input.packageRoot.resolve(
+          '../artifacts/${package}_$suffix',
+        );
+        output.dependencies.add(source);
+        final destination = input.outputDirectory.resolve('${package}_$suffix');
+        await File.fromUri(source).copy(File.fromUri(destination).path);
+        output.assets.data.add(
+          DataAsset(
+            package: input.packageName,
+            name: 'web/${package}_$suffix',
+            file: destination,
+          ),
+        );
+      }
+    }
+  });
+}

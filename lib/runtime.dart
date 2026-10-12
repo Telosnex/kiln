@@ -1,4 +1,4 @@
-/// Download and check of runtime files (ADR 005 D13): models and GPU packs.
+/// Download and check of runtime files (ADR 001 D13): models and GPU packs.
 ///
 /// This library has no Flutter and no build hook dependency. It uses
 /// `dart:io`, so web apps must import it conditionally.

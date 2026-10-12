@@ -78,7 +78,7 @@ var _unique = 0;
 /// If [destination] already has that SHA-256, nothing is downloaded.
 /// Otherwise the file is downloaded and decoded next to [destination], checked,
 /// and renamed into place. [destination] never holds a file with another
-/// SHA-256 when this returns or throws (ADR 005 I7).
+/// SHA-256 when this returns or throws (ADR 001 I7).
 ///
 /// [archiveCache] keeps downloaded archives at
 /// `<archiveCache>/<downloadSha256>/<file name>`, so several entries of one

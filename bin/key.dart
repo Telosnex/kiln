@@ -9,7 +9,7 @@ Future<void> main(List<String> arguments) => runCommand(
   ArgParser()
     ..addOption('package', defaultsTo: '.')
     ..addFlag('list', help: 'Print the hashed lines (compare them with diff).'),
-  'dart run native_prebuilt:key [--list]\nPrints the source key (ADR 005 D3).',
+  'dart run native_prebuilt:key [--list]\nPrints the source key (ADR 001 D3).',
   (args) async {
     final key = await computeSourceKey(packageRootOf(args));
     if (args.flag('list')) stdout.write(key.listing);

@@ -1,0 +1,31 @@
+import 'dart:js_interop';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
+@JS('globalThis.flutterAssetProbe')
+external set _result(JSString value);
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    for (final package in ['image_ffmpeg', 'zxing_dart']) {
+      final prefix = 'packages/web_payload_probe/web/${package}_module';
+      final wasm = await rootBundle.load('$prefix.wasm');
+      if (wasm.getUint32(0) != 0x0061736d) {
+        throw StateError('Bad Wasm magic: $package');
+      }
+      if ((await rootBundle.loadString('$prefix.mjs')).isEmpty) {
+        throw StateError('Empty JS module: $package');
+      }
+    }
+    _result = 'PASS'.toJS;
+  } catch (error) {
+    _result = 'FAIL: $error'.toJS;
+  }
+  runApp(
+    const Directionality(
+      textDirection: TextDirection.ltr,
+      child: Text('Web data assets probe'),
+    ),
+  );
+}

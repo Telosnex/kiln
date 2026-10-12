@@ -1,6 +1,6 @@
 import 'package:code_assets/code_assets.dart';
 
-/// A target name of ADR 005 §5: `<os>-<arch>`, and for iOS
+/// A target name of ADR 001 §5: `<os>-<arch>`, and for iOS
 /// `ios-<arch>-<iphoneos|iphonesimulator>`.
 final class TargetName {
   TargetName(this.os, this.architecture, [this.iosSdk]) {

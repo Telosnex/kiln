@@ -1,7 +1,7 @@
 import 'hashing.dart';
 
 /// A file that an app downloads after install: a model, or a GPU pack
-/// (ADR 005 D12, D13).
+/// (ADR 001 D12, D13).
 final class RuntimeFile {
   const RuntimeFile({
     required this.name,
@@ -58,7 +58,7 @@ final class RuntimeFile {
   /// Path of the file inside the archive at [url].
   final String? archiveEntry;
 
-  /// The GPU pack that this file belongs to (ADR 004 D13).
+  /// The GPU pack that this file belongs to (fllama ADR 004 D13).
   final String? pack;
 
   /// Throws a [FormatException] if a field is invalid.

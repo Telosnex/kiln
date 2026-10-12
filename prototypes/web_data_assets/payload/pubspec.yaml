@@ -1,0 +1,7 @@
+name: web_payload_probe
+publish_to: none
+environment:
+  sdk: ^3.10.0
+dependencies:
+  hooks: ^2.0.0
+  data_assets: ^0.20.0

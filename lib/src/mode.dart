@@ -1,4 +1,4 @@
-/// The `native_build` user define (ADR 005 D2).
+/// The `native_build` user define (ADR 001 D2).
 enum NativeBuildMode {
   auto,
   download,
@@ -54,7 +54,7 @@ final class FailBuild extends BuildDecision {
   final String message;
 }
 
-/// Applies ADR 005 D2.
+/// Applies ADR 001 D2.
 ///
 /// [prebuiltProblem] is null if the manifest has files for this target, its
 /// source key equals the local key, and the files can serve this build.

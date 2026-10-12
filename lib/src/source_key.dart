@@ -9,7 +9,7 @@ import 'hashing.dart';
 /// itself part of the source key.
 const sourceExcludesPath = 'native_artifacts/source_excludes.txt';
 
-/// Paths that never change the source key (ADR 005 §5). An entry that ends
+/// Paths that never change the source key (ADR 001 §5). An entry that ends
 /// in `/` excludes a top-level directory. Other entries are exact paths.
 ///
 /// Also excluded: every top-level name that starts with `.`, top-level
@@ -55,7 +55,7 @@ final class SourceKey {
   String get listing => files.map((f) => '${f.path}\t${f.sha256}\n').join();
 }
 
-/// Computes the source key of the package at [packageRoot] (ADR 005 D3).
+/// Computes the source key of the package at [packageRoot] (ADR 001 D3).
 ///
 /// If the package is in a git work tree, the files are the output of
 /// `git ls-files --cached --others --exclude-standard`: tracked files, and

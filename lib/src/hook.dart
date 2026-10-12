@@ -14,7 +14,7 @@ import 'source_key.dart';
 import 'targets.dart';
 
 /// Information for a source build that makes release files
-/// (`native_release`, ADR 005 D7).
+/// (`native_release`, ADR 001 D7).
 final class PrebuiltRelease {
   PrebuiltRelease._({
     required this.repository,
@@ -31,7 +31,7 @@ final class PrebuiltRelease {
   String get tag => nativeReleaseTag(sourceKey);
 
   /// The URL that file [fileName] of this target will have. A library can
-  /// contain the URLs of its runtime files (ADR 004 D13).
+  /// contain the URLs of its runtime files (fllama ADR 004 D13).
   String assetUrl(String fileName) =>
       githubAssetUrl(repository, tag, nativeAssetName(target.name, fileName));
 
@@ -50,7 +50,7 @@ final class SourceBuild {
   });
 
   /// The source key of the package. A local build cache can use it in its
-  /// own key (ADR 005 D4).
+  /// own key (ADR 001 D4).
   final SourceKey sourceKey;
 
   /// Why the hook builds from source.
@@ -60,7 +60,7 @@ final class SourceBuild {
   final PrebuiltRelease? release;
 }
 
-/// Runs ADR 005 D2 in a build hook: publish prebuilt files, or run the
+/// Runs ADR 001 D2 in a build hook: publish prebuilt files, or run the
 /// package's source build.
 ///
 /// ```dart
@@ -90,7 +90,7 @@ final class NativePrebuilt {
 
   final void Function(String message)? log;
 
-  /// The shared cache (ADR 005 D9). The user define `native_prebuilt_cache`
+  /// The shared cache (ADR 001 D9). The user define `native_prebuilt_cache`
   /// (a path relative to the pubspec) changes it.
   final Directory cacheRoot;
   final HttpClient? httpClient;
@@ -198,7 +198,7 @@ final class NativePrebuilt {
   }
 
   /// Returns the cache entry for [file], after a check of its SHA-256
-  /// (ADR 005 D9, I1).
+  /// (ADR 001 D9, I1).
   Future<File> _cached(PrebuiltFile file, HttpClient http) => fetchVerified(
     file.fetchSpec,
     File(p.join(cacheRoot.path, file.sha256, file.name)),

@@ -59,7 +59,7 @@ Future<String> readPackageName(Uri packageRoot) async {
 
 /// `native_prebuilt:build`: runs the hook of the package at [packageRoot]
 /// for [target] with `native_build: source` and `native_release`, and copies
-/// its files and a [targetDescriptionName] into [out] (ADR 005 D6).
+/// its files and a [targetDescriptionName] into [out] (ADR 001 D6).
 Future<void> buildTarget({
   required Uri packageRoot,
   required TargetName target,
@@ -270,7 +270,7 @@ Future<(BuildInput, BuildOutput)> runHook({
 }
 
 /// `native_prebuilt:release`: uploads the targets that `build` wrote under
-/// [targetDirectories], and writes the manifest (ADR 005 D6). Without a
+/// [targetDirectories], and writes the manifest (ADR 001 D6). Without a
 /// [publisher], nothing is uploaded.
 Future<PrebuiltManifest> releaseTargets({
   required Uri packageRoot,
@@ -383,7 +383,7 @@ final _githubAsset = RegExp(
   r'^https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/([^/]+)$',
 );
 
-/// `native_prebuilt:check` (ADR 005 D10, I4): returns the problems found.
+/// `native_prebuilt:check` (ADR 001 D10, I4): returns the problems found.
 ///
 /// Checks that the local source key equals the manifest key, and that each
 /// URL returns its file. GitHub release assets are checked by the SHA-256
@@ -518,7 +518,7 @@ Future<int> _headStatus(HttpClient http, String url) async {
   return response.statusCode;
 }
 
-/// `native_prebuilt:runtime_release` (ADR 005 D12): uploads [files] as the
+/// `native_prebuilt:runtime_release` (ADR 001 D12): uploads [files] as the
 /// complete set of runtime files, then writes the `runtimeFiles` section and
 /// [runtimeDartPath]. A published release of the same set is reused.
 Future<RuntimeFileSet> runtimeRelease({

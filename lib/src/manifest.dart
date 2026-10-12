@@ -14,7 +14,7 @@ enum Delivery {
   /// A code asset inside the app.
   bundle,
 
-  /// The app downloads the file after install (ADR 004 D14).
+  /// The app downloads the file after install (fllama ADR 004 D14).
   runtime,
 }
 
@@ -170,7 +170,7 @@ final class PrebuiltTarget {
   };
 }
 
-/// The `runtimeFiles` section (ADR 005 D12).
+/// The `runtimeFiles` section (ADR 001 D12).
 final class RuntimeFileSet {
   const RuntimeFileSet({required this.release, required this.files});
 
@@ -203,7 +203,7 @@ final class RuntimeFileSet {
   };
 }
 
-/// `native_artifacts/prebuilt.json` (ADR 005 §5).
+/// `native_artifacts/prebuilt.json` (ADR 001 §5).
 final class PrebuiltManifest {
   const PrebuiltManifest({
     required this.sourceKey,
