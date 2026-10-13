@@ -410,10 +410,10 @@ Ranked by irreversibility.
 4. **The first web build downloads all web files.** That is 26 MB for
    Telosnex, then the native_prebuilt cache holds them (ADR 001). An offline
    first build fails.
-5. **Web build time in CI is unknown.** The image_ffmpeg FFmpeg and libaom
-   Wasm builds and the fllama llama.cpp Wasm build can take longer than the
-   native jobs. An Actions cache keyed by the pinned inputs can be
-   necessary.
+5. **Web build time in CI.** Measured 2026-10-13, without a cache: the
+   image_ffmpeg web build (libaom, FFmpeg, shim) takes 254 s, and the fllama
+   wllama build takes 366 s. Each web job runs in parallel with the native
+   jobs and is shorter than the longest of them. A cache is not necessary.
 6. **One key couples web and native releases (D5).** A change to the wllama
    patch rebuilds all 12 fllama native targets. The cost is CI time.
 7. **Package browser tests need the files.** `dart test -p chrome` in a
@@ -451,16 +451,16 @@ Ranked by irreversibility.
    only `flutter pub upgrade zxing_dart`.
 4. **Telosnex check.** Add I4 to `dev/ci/releases/release.dart`. Do this
    before the next package, so a release with zxing_dart has the guard.
-5. **fonnx.** Do step 3 for fonnx. Load each init module from Dart at first
+5. **Done (package side). fonnx.** Do step 3 for fonnx. Load each init module from Dart at first
    use (D8). The web job extracts ORT from the pinned tarball. Then in
    Telosnex: delete the fonnx files and old ORT files from `web/`, remove
    their tags from `web/index.html`, and remove their names from
    `dev/ci/build_web.sh`. Done when every fonnx web model passes its
    browser test in a Telosnex web build with ORT 1.27.0.
-6. **image_ffmpeg.** Do step 3 for image_ffmpeg. Its three web build
+6. **Done. image_ffmpeg.** Do step 3 for image_ffmpeg. Its three web build
    scripts become one Dart script (D11). Measure the web job
    time (risk 5).
-7. **fllama.** Move the wllama patch to `web_build/`. Add
+7. **Done (package side). fllama.** Move the wllama patch to `web_build/`. Add
    `web_build/wllama.json`. Build wllama in the web job with `set -e`.
    Load `fllama_web_init.js` from Dart (D8). Remove its tag from Telosnex
    `web/index.html` and from `dev/ci/build_web.sh`. Update
@@ -546,6 +546,13 @@ Ranked by irreversibility.
   (the ORT Web files from the pinned npm tarball) and the model release
   `runtime-aae5c3ee879612eb`. The release workflow runs the Node and Chrome
   tests of every web model before the release.
+- 2026-10-13: Step 6 done: image_ffmpeg release `native-f092e4dab2516e97`.
+  Its Worker also lost messages that arrived while its imports loaded; it
+  now keeps them. Step 7, fllama release `native-cc228460a674b88e`:
+  `tool/build_web.dart` builds wllama in
+  the emsdk 4.0.20 image, and the web-test job loads stories15M in Chrome
+  before the release. Measured the web build times (risk 5). The Telosnex
+  side of steps 5 and 7 is one change after this.
 
 ### C. fonnx Whisper cutover: open items
 
