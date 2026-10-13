@@ -596,12 +596,22 @@ like the old model.
   run on web. The step 5 cleanup removed these files.
 - **Web JS size.** The Whisper vocabulary is Dart source. It adds 840 KB to
   the dart2js output (235 KB with gzip).
-- **Known test failures before this change.** Under
-  `flutter test --platform chrome --wasm`, each fonnx model Worker stops
-  with "Worker crashed: unknown error", Silero VAD too. Thus Whisper has no
-  dart2wasm test result. The Magika `?v=` query test times out under DDC.
-  `tool/verify_artifacts.dart` fails on the branch for the web files that
-  steps 2 to 5 changed.
+- **Known test failures before this change.** The Magika `?v=` query test
+  times out under DDC. `tool/verify_artifacts.dart` fails on the branch for
+  the web files that steps 2 to 5 changed.
+- **dart2wasm Worker crash: a test server issue.** Under
+  `flutter test --platform chrome --wasm`, each fonnx model Worker stopped
+  with "Worker crashed: unknown error". The cause is the Flutter test server.
+  With `--wasm`, the default renderer is skwasm, and the server sends COOP
+  and COEP on the `.html` page only. The page is then cross-origin isolated,
+  and Chrome refuses a Worker script that has no COEP header.
+  `--no-cross-origin-isolation` does not change the headers of that page.
+  Production sends the headers on each file, so production is not affected:
+  a `--wasm` build of the fonnx example, with skwasm and the production
+  headers, ran Magika and Whisper in Chrome. With the headers on the `.html`
+  page only, it failed in the same way. fonnx `tool/test_all.sh` and its
+  native release workflow now run `web_runtime_test.dart` under dart2wasm
+  with the CanvasKit renderer, which keeps the page not isolated.
 
 #### C.2 Speed
 
