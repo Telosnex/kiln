@@ -281,8 +281,8 @@ I4: A Telosnex web build contains, under native_prebuilt/<package>/, each
     web.json file of each resolved package, with its SHA-256.
     If violated: Flutter no longer runs the hook before it copies web/, or
     the hook failed silently. The web build has missing or old files (D1).
-    Pinned by: a check in dev/ci/releases/release.dart after the web build
-    (planned).
+    Pinned by: checkWebRuntimeFiles in dev/ci/releases/native_prebuilt.dart,
+    which release.dart runs after the web build.
 ```
 
 ## 5. Formats & names
@@ -439,7 +439,7 @@ Ranked by irreversibility.
    search, the web_root override, the code-asset gate, a changed
    hand-written file, a hash mismatch in a download, a source key mismatch,
    and the install-dev .gitignore and version file.
-3. **zxing_dart.** Replace `tool/build_web.sh` with a Dart script that
+3. **Done. zxing_dart.** Replace `tool/build_web.sh` with a Dart script that
    writes to a given directory (D11). Remove the build script from
    `source_excludes.txt`. Run `web install-dev` before the
    browser tests in `tool/test_all.sh`, and convert that script to Dart.
@@ -449,9 +449,9 @@ Ranked by irreversibility.
    and delete the generated files from git. Add the web job (D10). Make a
    release. Done when Telosnex web builds with the released files after
    only `flutter pub upgrade zxing_dart`.
-4. **Telosnex check.** Add I4 to `dev/ci/releases/release.dart`. Do this
+4. **Done. Telosnex check.** Add I4 to `dev/ci/releases/release.dart`. Do this
    before the next package, so a release with zxing_dart has the guard.
-5. **Done (package side). fonnx.** Do step 3 for fonnx. Load each init module from Dart at first
+5. **Done. fonnx.** Do step 3 for fonnx. Load each init module from Dart at first
    use (D8). The web job extracts ORT from the pinned tarball. Then in
    Telosnex: delete the fonnx files and old ORT files from `web/`, remove
    their tags from `web/index.html`, and remove their names from
@@ -460,7 +460,7 @@ Ranked by irreversibility.
 6. **Done. image_ffmpeg.** Do step 3 for image_ffmpeg. Its three web build
    scripts become one Dart script (D11). Measure the web job
    time (risk 5).
-7. **Done (package side). fllama.** Move the wllama patch to `web_build/`. Add
+7. **Done. fllama.** Move the wllama patch to `web_build/`. Add
    `web_build/wllama.json`. Build wllama in the web job with `set -e`.
    Load `fllama_web_init.js` from Dart (D8). Remove its tag from Telosnex
    `web/index.html` and from `dev/ci/build_web.sh`. Update
@@ -553,6 +553,13 @@ Ranked by irreversibility.
   the emsdk 4.0.20 image, and the web-test job loads stories15M in Chrome
   before the release. Measured the web build times (risk 5). The Telosnex
   side of steps 5 and 7 is one change after this.
+- 2026-10-13: Steps 4, 5 and 7 done. A Telosnex web build at
+  `136dfddf9e`, with `dev/ci/build_web.sh` in build-only mode, passed I4:
+  fllama 4 files, fonnx 20, image_ffmpeg 4, zxing_dart 4, also in
+  `web.zip`. In headless Chrome with the production COOP and COEP headers,
+  the app drew its first frame. Each installed file loaded with `?v=` and
+  the correct MIME type. fonnx Whisper tiny loaded from blob URLs and ran
+  one encode and one decode step. No request to `native_prebuilt/` failed.
 
 ### C. fonnx Whisper cutover: open items
 
@@ -568,8 +575,7 @@ merged decoder with a key/value cache. Both graphs use only standard ONNX
 and ORT operators. Shared Dart code in `lib/models/whisper/src/` computes
 the log-mel features, runs a 2-beam search with the Whisper token
 suppression, and decodes the tokens. Native and web use the same Dart code.
-The change is on the fonnx branch `adr002-web-runtime`. It is not
-committed.
+The change is in fonnx `main` (`d27949f`).
 
 The beam search is necessary. Greedy decoding drops the first sentence of
 a 28 s clip with speech at 0 s. The first token has two near-equal
@@ -579,15 +585,15 @@ like the old model.
 #### C.1 Items before release
 
 - **Model release.** Done: `runtime-aae5c3ee879612eb` (2026-10-13).
-- **Telosnex callers.** `Whisper.load(path)` is now
-  `Whisper.load(WhisperBundle.tiny(directory))`. Telosnex must download two
-  files. The download size changes from 75 MB to 151 MB. Change the size
-  label in the model picker.
-- **Telosnex `web/`.** The current Telosnex web Whisper does not work. Its
-  `web/` folder has the ORT 1.17.1 JS with Wasm files for ORT 1.18. With 1
-  thread, it stops with "memory access out of bounds". With threads, it
-  stops with "c is not a function". The step 5 cleanup of Telosnex `web/`
-  removes these files.
+- **Telosnex callers.** Done (Telosnex `dcbf8a36de`). `Whisper.load(path)`
+  is now `Whisper.load(bundle)`. Each model is two files, an encoder and a
+  decoder. fonnx `1231306` added `WhisperBundle.base` and
+  `WhisperBundle.small`, so Telosnex keeps its three Whisper sizes. The
+  downloads are 151 MB (tiny), 291 MB (base), and 968 MB (small). On web,
+  Telosnex reads the two files from IndexedDB and gives fonnx blob URLs.
+- **Telosnex `web/`.** Done (Telosnex `632bd95366`). The old `web/` folder
+  had the ORT 1.17.1 JS with Wasm files for ORT 1.18. That Whisper did not
+  run on web. The step 5 cleanup removed these files.
 - **Web JS size.** The Whisper vocabulary is Dart source. It adds 840 KB to
   the dart2js output (235 KB with gzip).
 - **Known test failures before this change.** Under
