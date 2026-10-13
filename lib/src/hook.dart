@@ -12,6 +12,8 @@ import 'mode.dart';
 import 'release_names.dart';
 import 'source_key.dart';
 import 'targets.dart';
+import 'web_install.dart';
+import 'web_manifest.dart';
 
 /// Information for a source build that makes release files
 /// (`native_release`, ADR 001 D7).
@@ -61,14 +63,14 @@ final class SourceBuild {
 }
 
 /// Runs ADR 001 D2 in a build hook: publish prebuilt files, or run the
-/// package's source build.
+/// package's source build. For a web build, [installWeb] installs the web
+/// runtime files of the package (ADR 002).
 ///
 /// ```dart
 /// await build(args, (input, output) async {
-///   if (!input.config.buildCodeAssets) return;
-///   await NativePrebuilt(input: input, output: output).run(
-///     (source) => buildFromSource(input, output, source),
-///   );
+///   final prebuilt = NativePrebuilt(input: input, output: output);
+///   if (!input.config.buildCodeAssets) return prebuilt.installWeb();
+///   await prebuilt.run((source) => buildFromSource(input, output, source));
 /// });
 /// ```
 final class NativePrebuilt {
@@ -170,6 +172,46 @@ final class NativePrebuilt {
         }
         if (release != null) await _writeSidecar(release);
     }
+  }
+
+  /// Installs the web runtime files of the package into
+  /// `<app>/web/native_prebuilt/<package>/` (ADR 002 D1, D2, D4).
+  ///
+  /// Does nothing if the build requests code assets, or if the package has
+  /// no web.json and the user define web_build is not local. The user
+  /// defines web_build, web_build_dir and web_root control it.
+  Future<void> installWeb() async {
+    if (input.config.buildCodeAssets) return;
+    final mode = WebBuildMode.parse(input.userDefines['web_build']);
+    final manifestFile = File.fromUri(
+      input.packageRoot.resolve(webManifestPath),
+    );
+    if (mode == WebBuildMode.download && !await manifestFile.exists()) {
+      return;
+    }
+    final localPath = input.userDefines.path('web_build_dir');
+    final set = await resolveWebFiles(
+      packageRoot: input.packageRoot,
+      manifest: await WebManifest.load(input.packageRoot),
+      mode: mode,
+      cacheRoot: cacheRoot,
+      localDirectory: localPath == null ? null : Directory.fromUri(localPath),
+      client: httpClient,
+      log: log,
+    );
+    final appRoot = switch (input.userDefines.path('web_root')) {
+      final Uri path => Directory.fromUri(path),
+      null => findAppRoot(input.outputDirectoryShared),
+    };
+    final installed = await installWebDirectory(
+      appWebDirectory(appRoot, input.packageName),
+      set.files,
+      lockDirectory: Directory(p.join(cacheRoot.path, 'locks')),
+      log: log,
+    );
+    output.dependencies
+      ..addAll(set.dependencies)
+      ..addAll(installed.map((f) => f.uri));
   }
 
   Future<void> _publishPrebuilt(PrebuiltTarget prebuilt) async {

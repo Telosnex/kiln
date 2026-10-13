@@ -14,6 +14,8 @@ import 'release_names.dart';
 import 'runtime_file.dart';
 import 'source_key.dart';
 import 'targets.dart';
+import 'web_manifest.dart';
+import 'web_tool.dart';
 
 /// Name of the file that `native_prebuilt:build` writes next to the files
 /// of one target.
@@ -272,11 +274,19 @@ Future<(BuildInput, BuildOutput)> runHook({
 /// `native_prebuilt:release`: uploads the targets that `build` wrote under
 /// [targetDirectories], and writes the manifest (ADR 001 D6). Without a
 /// [publisher], nothing is uploaded.
+///
+/// With [webDirectory], the generated web files in it go into the same
+/// release, and web.json is written (ADR 002 D3). [webRunner] and
+/// [webToolchain] are text for web.json. A package whose web.json has
+/// generated files needs [webDirectory].
 Future<PrebuiltManifest> releaseTargets({
   required Uri packageRoot,
   required List<Directory> targetDirectories,
   required String repository,
   required Directory staging,
+  Directory? webDirectory,
+  String webRunner = '',
+  String webToolchain = '',
   Publisher? publisher,
   String Function(String tag, String assetName)? assetUrl,
   Log? log,
@@ -299,6 +309,29 @@ Future<PrebuiltManifest> releaseTargets({
   ];
   if (descriptions.isEmpty) {
     throw StateError('No $targetDescriptionName under $targetDirectories.');
+  }
+  final WebManifest? web;
+  final List<File> webAssets;
+  if (webDirectory == null) {
+    if ((await WebManifest.load(packageRoot))?.generated.isNotEmpty ?? false) {
+      throw StateError(
+        '$webManifestPath has generated files. Pass --web with the web '
+        'build output, so that native and web files have one source key.',
+      );
+    }
+    (web, webAssets) = (null, const []);
+  } else {
+    (webAssets, web) = await prepareWebRelease(
+      packageRoot: packageRoot,
+      directory: webDirectory,
+      staging: staging,
+      sourceKey: sourceKey.key,
+      tag: tag,
+      release: githubReleaseUrl(repository, tag),
+      runner: webRunner,
+      toolchain: webToolchain,
+      assetUrl: urlOf,
+    );
   }
 
   await staging.create(recursive: true);
@@ -357,11 +390,12 @@ Future<PrebuiltManifest> releaseTargets({
     await publisher.publish(
       repository: repository,
       tag: tag,
-      assets: assets,
+      assets: [...assets, ...webAssets],
       latest: true,
       notes:
           'Prebuilt native files of $packageName for source key '
-          '${sourceKey.key}. Targets: ${(targets.keys.toList()..sort()).join(', ')}.',
+          '${sourceKey.key}. Targets: ${(targets.keys.toList()..sort()).join(', ')}'
+          '${web == null ? '' : ', web'}.',
     );
   } else {
     log?.call('Dry run: assets are in ${staging.path}');
@@ -376,6 +410,13 @@ Future<PrebuiltManifest> releaseTargets({
   );
   await manifest.save(packageRoot);
   log?.call('Wrote $manifestPath for ${targets.length} targets');
+  if (web != null) {
+    await web.save(packageRoot);
+    log?.call(
+      'Wrote $webManifestPath (${web.files.length} files, webVersion '
+      '${web.webVersion}) and $webRuntimeDartPath',
+    );
+  }
   return manifest;
 }
 
@@ -383,12 +424,14 @@ final _githubAsset = RegExp(
   r'^https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/([^/]+)$',
 );
 
-/// `native_prebuilt:check` (ADR 001 D10, I4): returns the problems found.
+/// `native_prebuilt:check` (ADR 001 D10, I4; ADR 002 I1, I2): returns the
+/// problems found.
 ///
-/// Checks that the local source key equals the manifest key, and that each
-/// URL returns its file. GitHub release assets are checked by the SHA-256
-/// that GitHub reports. With [download], every file is downloaded and
-/// checked.
+/// Checks that the local source key equals the manifest keys, that
+/// hand-written web files and the web Dart file match web.json, and that
+/// each URL returns its file. GitHub release assets are checked by the
+/// SHA-256 that GitHub reports. With [download], every file is downloaded
+/// and checked.
 Future<List<String>> checkPackage({
   required Uri packageRoot,
   bool download = false,
@@ -399,6 +442,8 @@ Future<List<String>> checkPackage({
   if (manifest == null) return ['The package has no $manifestPath.'];
   final problems = <String>[];
   final sourceKey = await computeSourceKey(packageRoot);
+  final webProblems = await checkWebLocal(packageRoot, sourceKey);
+  problems.addAll(webProblems ?? const []);
   if (sourceKey.key != manifest.sourceKey) {
     problems.add(
       'Source key ${sourceKey.key} differs from the manifest key '
@@ -422,6 +467,16 @@ Future<List<String>> checkPackage({
       ),
       file.downloadSha256,
     );
+  }
+
+  if (webProblems != null) {
+    try {
+      for (final file in (await WebManifest.load(packageRoot))!.generated) {
+        specs['web/${file.name}'] = (file.fetchSpec, file.downloadSha256);
+      }
+    } on FormatException {
+      // checkWebLocal reported it.
+    }
   }
 
   final http = client ?? HttpClient();

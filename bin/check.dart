@@ -10,7 +10,8 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addOption('package', defaultsTo: '.')
     ..addFlag('download', help: 'Download and check every file.'),
   'dart run native_prebuilt:check [--download]\n'
-  'Fails if the source key differs from the manifest, or a file is missing.',
+  'Fails if the source key differs from the manifests, a hand-written web '
+  'file differs from web.json, or a file is missing.',
   (args) async {
     final problems = await checkPackage(
       packageRoot: packageRootOf(args),

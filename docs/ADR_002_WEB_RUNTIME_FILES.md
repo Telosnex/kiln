@@ -261,14 +261,14 @@ I1: At each commit on the main branch of a package, the web.json source key
     its recorded SHA-256.
     If violated: the hook fails in download mode, or Telosnex ships a web
     runtime that does not match the Dart code of that commit.
-    Pinned by: native_prebuilt:check (planned extension), on each pull
+    Pinned by: native_prebuilt:check, on each pull
     request that changes a manifest, once a day on main, and in the Telosnex
     release (ADR 001 D10).
 
 I2: Each generated entry in web.json names a file in the immutable release
     of its source key, with the same SHA-256.
     If violated: the hook fails for every user of that commit.
-    Pinned by: native_prebuilt:check --download (planned), in the
+    Pinned by: native_prebuilt:check --download, in the
     native-manifest pull request.
 
 I3: Every request that a package makes for a web runtime file has the query
@@ -299,16 +299,20 @@ it, as it excludes `prebuilt.json`.
   "toolchain": "Emscripten 5.0.0 (a7c5deabd7c88ba1c38ebe988112256775f944c6)",
   "webVersion": "<16 hex>",
   "files": [
-    {"name": "zxing_dart_module.wasm", "sha256": "<64 hex>", "bytes": 1330977, "source": "release"},
+    {"name": "zxing_dart_module.wasm", "sha256": "<64 hex>", "bytes": 1330977, "source": "release",
+     "url": "https://github.com/Telosnex/zxing_dart/releases/download/native-<16 hex>/web-zxing_dart_module.wasm.gz",
+     "downloadSha256": "<64 hex>"},
     {"name": "zxing_dart_worker.mjs", "sha256": "<64 hex>", "bytes": 1761, "source": "lib/web/zxing_dart_worker.mjs"}
   ]
 }
 ```
 
 - `name`: the path under `web/native_prebuilt/<package>/`, with `/`.
-- `source: "release"`: a generated file. The hook downloads the release
-  asset `web-<name with "/" replaced by "__">`. Only the release workflow
-  changes the entry.
+- `source: "release"`: a generated file. The release asset is the gzip of
+  the file, named `web-<name with "/" replaced by "__">.gz`. `url` is the
+  asset URL, and `downloadSha256` is the SHA-256 of the gzip. The hook
+  downloads `url`, verifies `downloadSha256`, unpacks, and verifies
+  `sha256`. Only the release workflow changes the entry.
 - `source: <path>`: a hand-written file at that path in the package.
   `native_prebuilt:web stamp` changes the entry.
 
@@ -428,7 +432,7 @@ Ranked by irreversibility.
    Run the 48 zxing browser tests against the output. Record if `dart test
    -p chrome` runs the package hook (risk 7). Record the job time. Record
    the results in §B.
-2. **native_prebuilt.** Add the web.json model, webVersion, the install
+2. **Done. native_prebuilt.** Add the web.json model, webVersion, the install
    function (D2, D4), the hook entry point, `web stamp`,
    `web install-dev` (D13), `web_install`, `release --web` and the check
    extension (I1, I2). Add unit tests for webVersion, the app directory
@@ -528,3 +532,9 @@ Ranked by irreversibility.
   browser tests before release. The per-package toolchains moved to D11.
 - 2026-10-12: Accepted. The founder confirmed R4, R5, R6 and R8 as
   requirements for the Telosnex packages.
+- 2026-10-13: Step 2 done. Release assets are gzipped
+  (`web-<name>.gz`), and each generated entry records its `url` and
+  `downloadSha256` (§5). A `flutter build web` of a test app installed
+  the files in download mode, did not rewrite them on a rebuild, used
+  local mode, ran again after a local file changed, and removed a stale
+  file on the change back to download mode.
