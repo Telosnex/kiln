@@ -538,3 +538,112 @@ Ranked by irreversibility.
   the files in download mode, did not rewrite them on a rebuild, used
   local mode, ran again after a local file changed, and removed a stale
   file on the change back to download mode.
+- 2026-10-13: Step 3 done (zxing_dart release native-3ae1347f736a5a72).
+  Step 5 found that the fonnx Whisper model needs ORT Extensions. Added §C:
+  the cutover to the onnx-community split export, the items before
+  release, the speed values, and the next steps.
+
+### C. fonnx Whisper cutover: open items
+
+Step 5 found that the fonnx Whisper model did not run on stock ORT Web. The
+model was an Olive export with ORT Extensions operators (`StftNorm`,
+`BpeDecoder`). The ORT Web npm package does not contain these operators.
+D11 does not allow a custom ORT Web build for fonnx.
+
+The fonnx worktree now uses the fp32 split export of
+`onnx-community/whisper-tiny` at revision
+`ff4177021cc41f7db950912b73ea4fdf7d01d8e7`. The export has an encoder and a
+merged decoder with a key/value cache. Both graphs use only standard ONNX
+and ORT operators. Shared Dart code in `lib/models/whisper/src/` computes
+the log-mel features, runs a 2-beam search with the Whisper token
+suppression, and decodes the tokens. Native and web use the same Dart code.
+The change is on the fonnx branch `adr002-web-runtime`. It is not
+committed.
+
+The beam search is necessary. Greedy decoding drops the first sentence of
+a 28 s clip with speech at 0 s. The first token has two near-equal
+candidates (" How" 22.3%, " The" 21.2%). 2 beams keep the first sentence,
+like the old model.
+
+#### C.1 Items before release
+
+- **Model release.** Run `tool/publish_models.dart` for
+  `whisper_tiny_encoder.onnx` and `whisper_tiny_decoder.onnx`. Until this
+  release exists, the test "published model catalog matches the source
+  pins" in `test/runtime_models_test.dart` fails.
+- **Telosnex callers.** `Whisper.load(path)` is now
+  `Whisper.load(WhisperBundle.tiny(directory))`. Telosnex must download two
+  files. The download size changes from 75 MB to 151 MB. Change the size
+  label in the model picker.
+- **Telosnex `web/`.** The current Telosnex web Whisper does not work. Its
+  `web/` folder has the ORT 1.17.1 JS with Wasm files for ORT 1.18. With 1
+  thread, it stops with "memory access out of bounds". With threads, it
+  stops with "c is not a function". The step 5 cleanup of Telosnex `web/`
+  removes these files.
+- **Web JS size.** The Whisper vocabulary is Dart source. It adds 840 KB to
+  the dart2js output (235 KB with gzip).
+- **Known test failures before this change.** Under
+  `flutter test --platform chrome --wasm`, each fonnx model Worker stops
+  with "Worker crashed: unknown error", Silero VAD too. Thus Whisper has no
+  dart2wasm test result. The Magika `?v=` query test times out under DDC.
+  `tool/verify_artifacts.dart` fails on the branch for the web files that
+  steps 2 to 5 changed.
+
+#### C.2 Speed
+
+The new model is slower than the old model. Each value is the median time
+on an Apple M-series Mac with 16 cores.
+
+| Path | Clip | Old model | New model |
+|---|---|---|---|
+| Chrome, ORT Web Wasm, 8 threads, dart2js `-O2` | 5 s | 170 ms | 190 ms |
+| | 7 s | 163 ms | 203 ms |
+| | 28 s | 338 ms | 398 ms |
+| Native, ORT through FFI, `flutter test` (JIT) | 5 s | 75 ms | 107 ms |
+| | 28 s | 183 ms | 241 ms |
+
+On web, the new time for the 5 s clip has these parts:
+
+| Part | Time |
+|---|---|
+| Log-mel features (Dart) | 7 ms |
+| Encoder (ORT Web) | 119 ms |
+| Decoder, 11 steps (ORT Web and Worker messages) | 62 ms |
+| Beam search (Dart) | 9 ms |
+
+The cause is the model file, not the Dart code. The old Olive export had
+int8 weights: 66 `MatMulInteger` nodes and 59 `DynamicQuantizeLinear`
+nodes. It also had fused ORT operators: `Attention`,
+`SkipLayerNormalization`, and `BiasGelu`. The new export is fp32 and has no
+fused operators. The fp32 encoder alone takes 119 ms on web. The complete
+old model takes 170 ms. The Dart code adds 0.5 ms to 1 ms for each token.
+
+The quantized files in `onnx-community/whisper-tiny` are not the solution.
+On CPU, each quantized file was slower than fp32. Each quantized file also
+changed the transcripts. The `uint8` file repeats one sentence until the
+token limit.
+
+The native values come from a JIT test run. A release build was not
+measured.
+
+The new model is more accurate on the test clip. It writes "The rain in
+Spain falls mainly on the plane." The old model wrote "The rain and Spain".
+
+#### C.3 Next steps
+
+Do these steps as cleanup after the web path of native_prebuilt is stable
+for fonnx, image_ffmpeg, and fllama (steps 5 to 7).
+
+1. Make a fonnx export of `openai/whisper-tiny` with the same two-graph
+   layout. Apply the ORT transformer fusions. Quantize the encoder MatMul
+   weights to int8. Then quantize the decoder MatMul weights to int8.
+2. Keep the inputs and outputs of the current graphs. Then the Dart code
+   does not change.
+3. Measure each export on the three clips, on native release builds and on
+   Chrome. Compare the transcripts with the fp32 transcripts.
+4. Use an export only if it is faster than the old model and its
+   transcripts are equal to the fp32 transcripts.
+5. Move the vocabulary from Dart source to a data file that the model
+   download contains. This removes 840 KB from the web JS.
+6. If the Worker messages become a large part of the decoder time, move the
+   beam search into the Worker.
