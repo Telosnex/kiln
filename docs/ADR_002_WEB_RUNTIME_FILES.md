@@ -542,6 +542,10 @@ Ranked by irreversibility.
   Step 5 found that the fonnx Whisper model needs ORT Extensions. Added §C:
   the cutover to the onnx-community split export, the items before
   release, the speed values, and the next steps.
+- 2026-10-13: fonnx released `native-4366e2b2a423c0e5` with web.json
+  (the ORT Web files from the pinned npm tarball) and the model release
+  `runtime-aae5c3ee879612eb`. The release workflow runs the Node and Chrome
+  tests of every web model before the release.
 
 ### C. fonnx Whisper cutover: open items
 
@@ -567,10 +571,7 @@ like the old model.
 
 #### C.1 Items before release
 
-- **Model release.** Run `tool/publish_models.dart` for
-  `whisper_tiny_encoder.onnx` and `whisper_tiny_decoder.onnx`. Until this
-  release exists, the test "published model catalog matches the source
-  pins" in `test/runtime_models_test.dart` fails.
+- **Model release.** Done: `runtime-aae5c3ee879612eb` (2026-10-13).
 - **Telosnex callers.** `Whisper.load(path)` is now
   `Whisper.load(WhisperBundle.tiny(directory))`. Telosnex must download two
   files. The download size changes from 75 MB to 151 MB. Change the size
