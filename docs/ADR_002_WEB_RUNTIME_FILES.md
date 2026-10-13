@@ -611,7 +611,11 @@ like the old model.
   headers, ran Magika and Whisper in Chrome. With the headers on the `.html`
   page only, it failed in the same way. fonnx `tool/test_all.sh` and its
   native release workflow now run `web_runtime_test.dart` under dart2wasm
-  with the CanvasKit renderer, which keeps the page not isolated.
+  with the CanvasKit renderer, which keeps the page not isolated. If a
+  Worker does not load and the page is cross-origin isolated, the fonnx
+  error now names the COEP header. fonnx `8f4f297`, release
+  `native-a72173eb4dadd7cb`. `tool/test_all.sh` is now in fonnx
+  `source_excludes.txt`.
 
 #### C.2 Speed
 
