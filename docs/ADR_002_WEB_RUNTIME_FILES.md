@@ -596,9 +596,13 @@ like the old model.
   run on web. The step 5 cleanup removed these files.
 - **Web JS size.** The Whisper vocabulary is Dart source. It adds 840 KB to
   the dart2js output (235 KB with gzip).
-- **Known test failures before this change.** The Magika `?v=` query test
-  times out under DDC. `tool/verify_artifacts.dart` fails on the branch for
-  the web files that steps 2 to 5 changed.
+- **Known test failures before this change: fixed.** The Magika `?v=` query
+  test timed out under DDC because a message sent while the Worker imported
+  ORT was lost. fonnx `6346c92` fixed that. `tool/verify_artifacts.dart`
+  failed until a release stamped the changed web files, and it passes from
+  release `native-a72173eb4dadd7cb`. `flutter analyze` reported the git
+  dependency on native_prebuilt, so fonnx now has `publish_to: none`.
+  `tool/test_all.sh` passes in full (fonnx `70da3fc`).
 - **dart2wasm Worker crash: a test server issue.** Under
   `flutter test --platform chrome --wasm`, each fonnx model Worker stopped
   with "Worker crashed: unknown error". The cause is the Flutter test server.
