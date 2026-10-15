@@ -8,7 +8,9 @@ import 'package:path/path.dart' as p;
 import 'cache.dart';
 import 'fetch.dart';
 import 'manifest.dart';
+import 'defaults.dart';
 import 'mode.dart';
+import 'pinned_sources.dart';
 import 'release_names.dart';
 import 'source_key.dart';
 import 'targets.dart';
@@ -49,7 +51,46 @@ final class SourceBuild {
     required this.sourceKey,
     required this.reason,
     required this.release,
-  });
+    required Object? Function(String name) define,
+    required List<PinnedSource> pinnedSources,
+    required String target,
+    required Future<Directory> Function(PinnedSource source) resolve,
+  }) : _define = define,
+       _pinned = pinnedSources,
+       _target = target,
+       _resolve = resolve;
+
+  final Object? Function(String name) _define;
+  final List<PinnedSource> _pinned;
+  final String _target;
+  final Future<Directory> Function(PinnedSource source) _resolve;
+
+  /// The user define [name] of the package, else its default from
+  /// `<cache root>/defaults.json`.
+  Object? define(String name) => _define(name);
+
+  /// User define `host_toolchain`: use the tools on PATH, download nothing.
+  bool get hostToolchain => define(StandardDefines.hostToolchain) == true;
+
+  /// The pinned sources of `native_artifacts/sources.json` for this target.
+  List<PinnedSource> get pinnedSources => [
+    for (final s in _pinned)
+      if (s.appliesTo(_target)) s,
+  ];
+
+  /// The directory of pinned source [name]: a checkout of a git source, or
+  /// the directory that holds the file of a URL source. From
+  /// `<cache root>/sources/` if a packager put it there; otherwise fetched,
+  /// unless [hostToolchain] is set.
+  Future<Directory> pinnedSource(String name) {
+    final source = pinnedSources.where((s) => s.name == name).firstOrNull;
+    if (source == null) {
+      throw StateError(
+        'No pinned source "$name" for $_target in $sourcesPath.',
+      );
+    }
+    return _resolve(source);
+  }
 
   /// The source key of the package. A local build cache can use it in its
   /// own key (ADR 001 D4).
@@ -118,7 +159,11 @@ final class NativePrebuilt {
       '${stopwatch.elapsedMilliseconds}ms)',
     );
 
-    final mode = NativeBuildMode.parse(input.userDefines['native_build']);
+    final defaults = await UserDefineDefaults.load(cacheRoot);
+    if (defaults.file case final file?) output.dependencies.add(file.uri);
+    Object? define(String name) =>
+        input.userDefines[name] ?? defaults.values[name];
+    final mode = NativeBuildMode.parse(define(StandardDefines.nativeBuild));
     final repository = parseReleaseRepository(
       input.userDefines['native_release'],
     );
@@ -158,6 +203,16 @@ final class NativePrebuilt {
               sourceKey: sourceKey,
               reason: reason,
               release: release,
+              define: define,
+              pinnedSources: await loadPinnedSources(input.packageRoot),
+              target: target.name,
+              resolve: (source) => resolvePinnedSource(
+                source,
+                cacheRoot: cacheRoot,
+                offline: define(StandardDefines.hostToolchain) == true,
+                client: httpClient,
+                log: log,
+              ),
             ),
           );
         } on Object {

@@ -91,6 +91,41 @@ void main() {
     expect(listed.key, walked);
   });
 
+  test('a CRLF checkout of LF files has the key of the LF checkout', () async {
+    final origin = await fakePackage();
+    await git(origin, ['init', '-q']);
+    await git(origin, ['add', '-A']);
+    await git(origin, ['commit', '-qm', 'x']);
+    final lfKey = (await computeSourceKey(origin.uri)).key;
+
+    // A Windows-style clone: git converts LF to CRLF on checkout.
+    final parent = await tempDir();
+    await git(parent, [
+      '-c', 'core.autocrlf=true', 'clone', '-q', origin.path, 'crlf', //
+    ]);
+    final clone = Directory(p.join(parent.path, 'crlf'));
+    await git(clone, ['config', 'core.autocrlf', 'true']);
+    final c = await File(p.join(clone.path, 'src', 'lib.c')).readAsString();
+    expect(c, contains('\r\n'));
+    expect((await computeSourceKey(clone.uri)).key, lfKey);
+
+    // A real edit still changes the key.
+    await writeFiles(clone, {
+      'src/lib.c': 'int answer(void) { return 7; }\r\n',
+    });
+    expect((await computeSourceKey(clone.uri)).key, isNot(lfKey));
+  });
+
+  test('a file committed with CRLF keeps its bytes in the key', () async {
+    final root = await fakePackage(extra: {'src/win.bat': 'echo hi\r\n'});
+    final walked = await keyOf(root);
+    await git(root, ['init', '-q']);
+    await git(root, ['config', 'core.autocrlf', 'false']);
+    await git(root, ['add', '-A']);
+    await git(root, ['commit', '-qm', 'x']);
+    expect((await computeSourceKey(root.uri)).key, walked);
+  });
+
   test('git: ignored files do not count, new files do', () async {
     final root = await fakePackage(extra: {'.gitignore': 'src/out/\n'});
     await git(root, ['init', '-q']);

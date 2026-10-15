@@ -95,6 +95,10 @@ Future<SourceKey> computeSourceKey(
     paths.addAll(await _walk(root, root, excluder));
   }
 
+  // Files that git stores with LF but checked out with CRLF (Windows with
+  // core.autocrlf, also pub's git cache): hashed as stored, so a checkout
+  // gets the same key on every host.
+  final crlf = listed == null ? const <String>{} : await _crlfCheckouts(root);
   final memo = memoDirectory == null ? null : _Memo(memoDirectory, root);
   await memo?.load();
   final sorted = paths.toList()..sort();
@@ -102,7 +106,13 @@ Future<SourceKey> computeSourceKey(
   for (final path in sorted) {
     final full = p.join(root, p.fromUri(path));
     files.add(
-      SourceFile(path, await _hashEntry(full, memo, path), File(full).uri),
+      SourceFile(
+        path,
+        crlf.contains(path)
+            ? sha256OfBytes(_lf(await File(full).readAsBytes()))
+            : await _hashEntry(full, memo, path),
+        File(full).uri,
+      ),
     );
   }
   await memo?.save();
@@ -156,6 +166,39 @@ final class _Excluder {
     if (segments.length == 1 && path.toLowerCase().endsWith('.md')) return true;
     return _files.contains(path) || _directories.any(path.startsWith);
   }
+}
+
+/// Paths whose index copy has LF line endings and whose checkout has CRLF.
+Future<Set<String>> _crlfCheckouts(String root) async {
+  ProcessResult result;
+  try {
+    result = await Process.run(
+      'git',
+      ['ls-files', '-z', '--eol', '--cached'],
+      workingDirectory: root,
+      stdoutEncoding: utf8,
+    );
+  } on ProcessException {
+    return const {};
+  }
+  if (result.exitCode != 0) return const {};
+  // Entries: "i/lf    w/crlf  attr/                 \tpath".
+  return {
+    for (final entry in (result.stdout as String).split('\x00'))
+      if (entry.indexOf('\t') case final tab when tab > 0)
+        if (RegExp(r'^i/lf\s+w/crlf\b').hasMatch(entry.substring(0, tab)))
+          entry.substring(tab + 1),
+  };
+}
+
+/// [bytes] with each CRLF replaced by LF.
+List<int> _lf(List<int> bytes) {
+  final out = <int>[];
+  for (var i = 0; i < bytes.length; i++) {
+    if (bytes[i] == 13 && i + 1 < bytes.length && bytes[i + 1] == 10) continue;
+    out.add(bytes[i]);
+  }
+  return out;
 }
 
 Future<List<String>?> _gitFiles(String root) async {
