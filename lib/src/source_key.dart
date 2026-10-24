@@ -16,6 +16,7 @@ const sourceExcludesPath = 'native_artifacts/source_excludes.txt';
 /// `*.md` files, and `.git` and `.dart_tool` directories at any depth.
 const defaultSourceExcludes = [
   'build/',
+  'doc/',
   'docs/',
   'example/',
   'integration_test/',

@@ -14,6 +14,7 @@ void main() {
     final root = await fakePackage(
       extra: {
         '.github/workflows/x.yml': 'x',
+        'doc/a.txt': 'x',
         'docs/a.txt': 'x',
         'test/a_test.dart': 'x',
         'example/main.dart': 'x',

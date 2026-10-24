@@ -66,7 +66,7 @@ These facts follow:
 6. **Nothing binds a web file to its sources.** zxing_dart and image_ffmpeg
    exclude `tool/build_web.sh` from the source key (their
    `native_artifacts/source_excludes.txt`). fllama keeps its wllama patch in
-   `docs/`, which the source key excludes by default. A changed C++ source
+   `docs/`, which the source key excludes by default (with `doc/`). A changed C++ source
    gets a new native release, and the old Wasm file stays in git with no
    error.
 7. **Package web URLs do not change when their contents change.** The zxing

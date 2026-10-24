@@ -33,6 +33,6 @@ void main(List<String> args) async {
 
 ## Documentation
 
-- [ADR 001: Prebuilt native libraries](docs/ADR_001_PREBUILT_NATIVE_LIBRARIES.md)
-- [ADR 002: Web runtime files](docs/ADR_002_WEB_RUNTIME_FILES.md)
-- [Builds without network (Flatpak, Flathub)](docs/FLATPAK.md)
+- [ADR 001: Prebuilt native libraries](doc/ADR_001_PREBUILT_NATIVE_LIBRARIES.md)
+- [ADR 002: Web runtime files](doc/ADR_002_WEB_RUNTIME_FILES.md)
+- [Builds without network (Flatpak, Flathub)](doc/FLATPAK.md)

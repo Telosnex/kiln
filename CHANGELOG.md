@@ -15,4 +15,5 @@
   | Flatpak `.native_prebuilt_downloads/` | `.kiln_downloads/` |
 
 - A web install deletes `<app>/web/native_prebuilt/<package>/`. `web install-dev` replaces the old block in `lib/web/.gitignore`.
+- The source key also skips a top-level `doc/` directory, the pub layout name for documentation.
 - Release tags stay `native-<16 characters of the source key>`.
