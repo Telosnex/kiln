@@ -18,5 +18,5 @@ String githubReleaseUrl(String repository, String tag) =>
     'https://github.com/$repository/releases/tag/$tag';
 
 /// Name of the file that a release-mode hook run writes into its output
-/// directory, for `prebuilt:build`.
-const releaseSidecarName = 'prebuilt_release.json';
+/// directory, for `kiln:build`.
+const releaseSidecarName = 'kiln_release.json';

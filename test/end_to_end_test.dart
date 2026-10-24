@@ -5,10 +5,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
-import 'package:prebuilt/prebuilt.dart';
-import 'package:prebuilt/src/hashing.dart';
-import 'package:prebuilt/src/publisher.dart';
-import 'package:prebuilt/src/release_tool.dart';
+import 'package:kiln/kiln.dart';
+import 'package:kiln/src/hashing.dart';
+import 'package:kiln/src/publisher.dart';
+import 'package:kiln/src/release_tool.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -54,12 +54,12 @@ import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
-import 'package:prebuilt/prebuilt.dart';
+import 'package:kiln/kiln.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (!input.config.buildCodeAssets) return;
-    await Prebuilt(input: input, output: output).run((source) async {
+    await Kiln(input: input, output: output).run((source) async {
       final release = source.release;
       final name = input.config.code.targetOS.dylibFileName('fake');
       final file = File.fromUri(input.outputDirectory.resolve(name));
@@ -103,7 +103,7 @@ void main() {
           'environment:\n  sdk: ^3.10.0\n'
           'dependencies:\n'
           '  code_assets: any\n  hooks: any\n'
-          '  prebuilt:\n    path: ${jsonEncode(self)}\n',
+          '  kiln:\n    path: ${jsonEncode(self)}\n',
       'hook/build.dart': hookSource,
       'src/fake.c': 'int fake(void) { return 1; }\n',
       '.gitignore': '.dart_tool/\npubspec.lock\n',
@@ -122,7 +122,7 @@ void main() {
       packageRoot: package.uri,
       packageName: 'fake_native',
       target: target,
-      defines: {'prebuilt_cache': cache.path, ...defines},
+      defines: {'kiln_cache': cache.path, ...defines},
     );
     return File.fromUri(output.assets.code.single.file!).readAsString();
   }
@@ -231,7 +231,7 @@ void main() {
           packageName: 'fake_native',
           target: ios,
           iOSVersion: 13,
-          defines: {'native_build': mode, 'prebuilt_cache': cache.path},
+          defines: {'native_build': mode, 'kiln_cache': cache.path},
         );
         expect(
           await File.fromUri(output.assets.code.single.file!).readAsString(),

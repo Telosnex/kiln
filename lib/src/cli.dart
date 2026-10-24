@@ -52,7 +52,7 @@ String repositoryOf(ArgResults args) {
 Uri packageRootOf(ArgResults args) =>
     Directory(args.option('package')!).absolute.uri;
 
-void log(String message) => stderr.writeln('[prebuilt] $message');
+void log(String message) => stderr.writeln('[kiln] $message');
 
 /// `--staging`, or a new temporary directory.
 Future<Directory> stagingOf(ArgResults args, String prefix) async =>

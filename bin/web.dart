@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:prebuilt/src/cli.dart';
-import 'package:prebuilt/src/web_tool.dart';
+import 'package:kiln/src/cli.dart';
+import 'package:kiln/src/web_tool.dart';
 
 Future<void> main(List<String> arguments) {
   final stamp = ArgParser()
@@ -31,7 +31,7 @@ Future<void> main(List<String> arguments) {
     ArgParser()
       ..addCommand('stamp', stamp)
       ..addCommand('install-dev', installDevParser),
-    'dart run prebuilt:web <command> [options]\n'
+    'dart run kiln:web <command> [options]\n'
     '  stamp        Update the hand-written entries of web.json, its '
     'webVersion, and lib/src/web_runtime.g.dart.\n'
     '  install-dev  Install the web files into lib/web/ for the package '

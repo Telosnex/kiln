@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:prebuilt/src/cli.dart';
-import 'package:prebuilt/src/flatpak.dart';
+import 'package:kiln/src/cli.dart';
+import 'package:kiln/src/flatpak.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -13,7 +13,7 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addFlag(
       'source',
       help:
-          'Build every prebuilt package from source with its pinned '
+          'Build every kiln package from source with its pinned '
           'sources (writes defaults.json). Default: place prebuilt files.',
     )
     ..addOption(
@@ -23,15 +23,15 @@ Future<void> main(List<String> arguments) => runCommand(
     )
     ..addOption(
       'cache-dest',
-      defaultsTo: 'home/.cache/prebuilt',
+      defaultsTo: 'home/.cache/kiln',
       help:
-          'The prebuilt cache relative to the build directory. The '
+          'The kiln cache relative to the build directory. The '
           'manifest sets HOME to match.',
     ),
-  'dart run prebuilt:flatpak --out sources.json [--source]\n'
+  'dart run kiln:flatpak --out sources.json [--source]\n'
   'Writes Flatpak sources so the build hooks run without network.',
   (args) async {
-    final packages = await prebuiltPackages(Directory(args.option('app')!));
+    final packages = await kilnPackages(Directory(args.option('app')!));
     final sources = await flatpakSources(
       packages,
       FlatpakOptions(

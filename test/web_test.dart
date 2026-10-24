@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:hooks/hooks.dart';
-import 'package:prebuilt/prebuilt.dart';
-import 'package:prebuilt/src/hashing.dart';
-import 'package:prebuilt/src/release_tool.dart';
-import 'package:prebuilt/src/web_install.dart';
-import 'package:prebuilt/src/web_tool.dart';
+import 'package:kiln/kiln.dart';
+import 'package:kiln/src/hashing.dart';
+import 'package:kiln/src/release_tool.dart';
+import 'package:kiln/src/web_install.dart';
+import 'package:kiln/src/web_tool.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -92,11 +92,11 @@ void main() {
   }
 
   Directory installed() =>
-      Directory(p.join(app.path, 'web', 'prebuilt', 'fake_native'));
+      Directory(p.join(app.path, 'web', 'kiln', 'fake_native'));
 
   Future<BuildOutput> runWeb({Map<String, Object> defines = const {}}) async {
     final output = BuildOutputBuilder();
-    await Prebuilt(
+    await Kiln(
       input: webBuildInput(package, app, defines: defines),
       output: output,
       cacheRoot: cache,
@@ -198,15 +198,12 @@ void main() {
     test('a code-asset build installs nothing', () async {
       await writeWebManifest();
       final output = BuildOutputBuilder();
-      await Prebuilt(
+      await Kiln(
         input: await buildInput(package),
         output: output,
         cacheRoot: cache,
       ).installWeb();
-      expect(
-        Directory(p.join(app.path, 'web', 'prebuilt')).existsSync(),
-        isFalse,
-      );
+      expect(Directory(p.join(app.path, 'web', 'kiln')).existsSync(), isFalse);
     });
 
     test('no web.json installs nothing', () async {
@@ -224,9 +221,7 @@ void main() {
         'fake_worker.mjs': worker,
       });
       expect(
-        File(
-          p.join(app.path, 'web', 'prebuilt', '.gitignore'),
-        ).readAsStringSync(),
+        File(p.join(app.path, 'web', 'kiln', '.gitignore')).readAsStringSync(),
         '*\n',
       );
       expect(
@@ -351,7 +346,7 @@ void main() {
       await runWeb(defines: {'web_root': other.path});
       expect(
         (await installedFiles(
-          Directory(p.join(other.path, 'web', 'prebuilt', 'fake_native')),
+          Directory(p.join(other.path, 'web', 'kiln', 'fake_native')),
         )).keys,
         hasLength(3),
       );
@@ -487,10 +482,7 @@ void main() {
       );
       final again = File(p.join(libWeb.path, '.gitignore')).readAsStringSync();
       expect(again, isNot(contains('module.mjs')));
-      expect(
-        RegExp('# prebuilt web install-dev:').allMatches(again),
-        hasLength(1),
-      );
+      expect(RegExp('# kiln web install-dev:').allMatches(again), hasLength(1));
     });
   });
 
@@ -514,7 +506,7 @@ void main() {
       ).readAsStringSync();
       expect(gitignore, startsWith('/own.txt\n'));
       expect(gitignore, isNot(contains('native_prebuilt')));
-      expect(gitignore, contains('# prebuilt web install-dev:'));
+      expect(gitignore, contains('# kiln web install-dev:'));
       expect(
         File(p.join(libWeb.path, '.native_prebuilt_web_version')).existsSync(),
         isFalse,

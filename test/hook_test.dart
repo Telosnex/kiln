@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
-import 'package:prebuilt/prebuilt.dart';
-import 'package:prebuilt/src/hashing.dart';
+import 'package:kiln/kiln.dart';
+import 'package:kiln/src/hashing.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -73,7 +73,7 @@ void main() {
     final output = BuildOutputBuilder();
     var built = false;
     PrebuiltRelease? release;
-    await Prebuilt(input: input, output: output, cacheRoot: cache).run((
+    await Kiln(input: input, output: output, cacheRoot: cache).run((
       source,
     ) async {
       final r = source.release;

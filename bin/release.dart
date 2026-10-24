@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:prebuilt/src/cli.dart';
-import 'package:prebuilt/src/publisher.dart';
-import 'package:prebuilt/src/release_tool.dart';
+import 'package:kiln/src/cli.dart';
+import 'package:kiln/src/publisher.dart';
+import 'package:kiln/src/release_tool.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -20,8 +20,8 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addOption('web-runner', defaultsTo: '', help: 'Text for web.json.')
     ..addOption('web-toolchain', defaultsTo: '', help: 'Text for web.json.')
     ..addFlag('dry-run', help: 'Write the manifests, upload nothing.'),
-  'dart run prebuilt:release [options] <build output dirs...>\n'
-  'Uploads the files of prebuilt:build and writes prebuilt.json, '
+  'dart run kiln:release [options] <build output dirs...>\n'
+  'Uploads the files of kiln:build and writes prebuilt.json, '
   'and with --web also web.json.',
   (args) async {
     if (args.rest.isEmpty)

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:prebuilt/prebuilt.dart';
+import 'package:kiln/kiln.dart';
 import 'package:test/test.dart';
 
 final a = 'a' * 64, b = 'b' * 64, c = 'c' * 64;

@@ -27,14 +27,14 @@ enum WebBuildMode {
 
 /// Directory in the app `web/` directory that holds the package
 /// directories (ADR 002 §5).
-const webInstallDirectoryName = 'prebuilt';
+const webInstallDirectoryName = 'kiln';
 
 /// The [webInstallDirectoryName] of the package before its rename from
 /// native_prebuilt. An install deletes the package directory under it.
 const legacyWebInstallDirectoryName = 'native_prebuilt';
 
 /// Version file that `web install-dev` writes (ADR 002 D13).
-const devVersionFileName = '.prebuilt_web_version';
+const devVersionFileName = '.kiln_web_version';
 
 /// The web files of one package, ready to install.
 final class WebFileSet {
@@ -79,7 +79,7 @@ Future<WebFileSet> resolveWebFiles({
         await sha256OfFile(file) != entry.sha256) {
       throw StateError(
         '${entry.source} differs from its entry in $webManifestPath. Run '
-        '"dart run prebuilt:web stamp" in the package.',
+        '"dart run kiln:web stamp" in the package.',
       );
     }
     files[entry.name] = file;
@@ -292,8 +292,8 @@ Future<bool> _holds(Directory directory, Map<String, File> files) async {
   return true;
 }
 
-const _gitignoreStart = '# prebuilt web install-dev: generated, do not edit.';
-const _gitignoreEnd = '# End of prebuilt web install-dev.';
+const _gitignoreStart = '# kiln web install-dev: generated, do not edit.';
+const _gitignoreEnd = '# End of kiln web install-dev.';
 
 /// The markers before the rename from native_prebuilt. `web install-dev`
 /// replaces a block with these markers.

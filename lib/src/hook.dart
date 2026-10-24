@@ -45,7 +45,7 @@ final class PrebuiltRelease {
       _runtimeFiles.add({'file': file.toFilePath(), 'pack': ?pack});
 }
 
-/// What a source build gets from [Prebuilt.run].
+/// What a source build gets from [Kiln.run].
 final class SourceBuild {
   SourceBuild._({
     required this.sourceKey,
@@ -109,13 +109,13 @@ final class SourceBuild {
 ///
 /// ```dart
 /// await build(args, (input, output) async {
-///   final prebuilt = Prebuilt(input: input, output: output);
-///   if (!input.config.buildCodeAssets) return prebuilt.installWeb();
-///   await prebuilt.run((source) => buildFromSource(input, output, source));
+///   final kiln = Kiln(input: input, output: output);
+///   if (!input.config.buildCodeAssets) return kiln.installWeb();
+///   await kiln.run((source) => buildFromSource(input, output, source));
 /// });
 /// ```
-final class Prebuilt {
-  Prebuilt({
+final class Kiln {
+  Kiln({
     required this.input,
     required this.output,
     this.log,
@@ -123,7 +123,7 @@ final class Prebuilt {
     this.httpClient,
   }) : cacheRoot =
            cacheRoot ??
-           switch (input.userDefines.path('prebuilt_cache')) {
+           switch (input.userDefines.path('kiln_cache')) {
              final Uri path => Directory.fromUri(path),
              null => defaultCacheRoot(),
            };
@@ -133,7 +133,7 @@ final class Prebuilt {
 
   final void Function(String message)? log;
 
-  /// The shared cache (ADR 001 D9). The user define `prebuilt_cache`
+  /// The shared cache (ADR 001 D9). The user define `kiln_cache`
   /// (a path relative to the pubspec) changes it.
   final Directory cacheRoot;
   final HttpClient? httpClient;
@@ -230,7 +230,7 @@ final class Prebuilt {
   }
 
   /// Installs the web runtime files of the package into
-  /// `<app>/web/prebuilt/<package>/` (ADR 002 D1, D2, D4).
+  /// `<app>/web/kiln/<package>/` (ADR 002 D1, D2, D4).
   ///
   /// Does nothing if the build requests code assets, or if the package has
   /// no web.json and the user define web_build is not local. The user

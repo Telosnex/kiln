@@ -136,7 +136,7 @@ Future<(List<File>, WebManifest)> prepareWebRelease({
   );
 }
 
-/// The local problems of web.json for `prebuilt:check` (ADR 002
+/// The local problems of web.json for `kiln:check` (ADR 002
 /// I1): the source key, the hand-written files, and the Dart file. Null if
 /// the package has no web.json.
 Future<List<String>?> checkWebLocal(Uri packageRoot, SourceKey key) async {
@@ -161,7 +161,7 @@ Future<List<String>?> checkWebLocal(Uri packageRoot, SourceKey key) async {
     } else if (await sha256OfFile(local) != file.sha256) {
       problems.add(
         'web: ${file.source} differs from its entry. Run "dart run '
-        'prebuilt:web stamp".',
+        'kiln:web stamp".',
       );
     }
   }
@@ -170,7 +170,7 @@ Future<List<String>?> checkWebLocal(Uri packageRoot, SourceKey key) async {
       await dart.readAsString() != webRuntimeDart(manifest.webVersion)) {
     problems.add(
       'web: $webRuntimeDartPath does not have webVersion '
-      '${manifest.webVersion}. Run "dart run prebuilt:web stamp".',
+      '${manifest.webVersion}. Run "dart run kiln:web stamp".',
     );
   }
   return problems;

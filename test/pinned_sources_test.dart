@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:prebuilt/prebuilt.dart';
-import 'package:prebuilt/src/flatpak.dart';
-import 'package:prebuilt/src/hashing.dart';
-import 'package:prebuilt/src/pinned_sources.dart';
+import 'package:kiln/kiln.dart';
+import 'package:kiln/src/flatpak.dart';
+import 'package:kiln/src/hashing.dart';
+import 'package:kiln/src/pinned_sources.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -229,7 +229,7 @@ checksum = "${'e' * 64}"
         'url': 'https://x/lib.git',
         'commit': 'a' * 40,
         'disable-submodules': true,
-        'dest': 'home/.cache/prebuilt/sources/lib-${'a' * 16}',
+        'dest': 'home/.cache/kiln/sources/lib-${'a' * 16}',
       });
       expect(sources[1]['only-arches'], ['aarch64']);
       expect(sources[1]['dest-filename'], 'ort-arm.tgz');

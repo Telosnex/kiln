@@ -20,7 +20,7 @@ import 'locks.dart';
 /// ```
 ///
 /// Packagers read the file to place the sources before a build without
-/// network (`dart run prebuilt:flatpak`). The hook gets them with
+/// network (`dart run kiln:flatpak`). The hook gets them with
 /// `SourceBuild.pinnedSource`: from the cache if present, else fetched.
 const sourcesPath = 'native_artifacts/sources.json';
 

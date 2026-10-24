@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:prebuilt/prebuilt.dart';
-import 'package:prebuilt/src/cli.dart';
-import 'package:prebuilt/src/release_tool.dart';
+import 'package:kiln/kiln.dart';
+import 'package:kiln/src/cli.dart';
+import 'package:kiln/src/release_tool.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -27,7 +27,7 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addOption('macos-version', defaultsTo: '$defaultMacOSVersion')
     ..addOption('ios-version', defaultsTo: '$defaultIOSVersion')
     ..addOption('android-api', defaultsTo: '$defaultAndroidApi'),
-  'dart run prebuilt:build --target <target> --out <dir>\n'
+  'dart run kiln:build --target <target> --out <dir>\n'
   'Runs hook/build.dart with native_build: source and native_release.',
   (args) async {
     final env = Platform.environment;

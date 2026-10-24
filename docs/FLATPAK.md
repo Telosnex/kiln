@@ -2,7 +2,7 @@
 
 > The package was named `native_prebuilt` before 0.1.0.
 
-Flathub builds offline and from source. prebuilt supports that with
+Flathub builds offline and from source. kiln supports that with
 four pieces; together they let a packager generate every source a build
 hook needs, with no package-specific manifest entries.
 
@@ -35,7 +35,7 @@ it there. Do not fetch upstream code any other way.
 A package's own user define wins. Hooks get only a few environment
 variables (HOME, PATH, ...), so this file is the switch for a build that
 cannot edit the app's pubspec. With HOME=<build dir>/home it is
-`<build dir>/home/.cache/prebuilt/defaults.json`.
+`<build dir>/home/.cache/kiln/defaults.json`.
 
 ## 3. `host_toolchain`
 
@@ -46,7 +46,7 @@ to fill. Cargo reads vendored crates from `$HOME/.cargo/config.toml`.
 ## 4. The generator
 
 ```sh
-dart run prebuilt:flatpak --app <app> --source \
+dart run kiln:flatpak --app <app> --source \
   --build-root /run/build/<module> --out native-sources.json
 ```
 

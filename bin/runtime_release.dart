@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:prebuilt/src/cli.dart';
-import 'package:prebuilt/src/publisher.dart';
-import 'package:prebuilt/src/release_tool.dart';
+import 'package:kiln/src/cli.dart';
+import 'package:kiln/src/publisher.dart';
+import 'package:kiln/src/release_tool.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -12,7 +12,7 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addOption('repo', help: 'owner/name. Default: GITHUB_REPOSITORY.')
     ..addOption('staging', help: 'Directory for the .gz assets.')
     ..addFlag('dry-run', help: 'Write the manifest, upload nothing.'),
-  'dart run prebuilt:runtime_release [options] <files...>\n'
+  'dart run kiln:runtime_release [options] <files...>\n'
   'Uploads the complete set of runtime files and writes runtimeFiles and '
   '$runtimeDartPath.',
   (args) async {

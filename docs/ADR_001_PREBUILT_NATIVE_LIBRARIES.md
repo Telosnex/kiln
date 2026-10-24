@@ -1,6 +1,6 @@
 # ADR 001 — Prebuilt native libraries, built by the same hook code that builds from source
 
-> The package was named `native_prebuilt` before 0.1.0. The progress notes and the decision log keep the old names.
+> The package was named `native_prebuilt` before 0.1.0.
 
 Status: ACCEPTED (2026-10-05), implemented (steps 1 to 6 done, 2026-10-05)
 
@@ -78,7 +78,7 @@ package holds the code that is now repeated.
 ## 3. Decisions
 
 ```
-D1: A shared package, prebuilt, holds the target names, the
+D1: A shared package, kiln, holds the target names, the
     manifest format, the source key, download and check, the cache, the
     build mode, and the CI commands. Each package supplies its target list,
     its source build, and its output file names.
@@ -159,13 +159,13 @@ D8: The workflow builds each target on a fixed GitHub runner (§5). Linux
     change in the package.
 
 D9: Downloads go to one cache for all packages:
-    <user cache>/prebuilt/<sha256>/<file name>. A file lock protects
+    <user cache>/kiln/<sha256>/<file name>. A file lock protects
     each entry. The hook checks the SHA-256 after each download, and before
     it publishes a file from the cache.
     Because: R5
     Instead of: one cache per package. Equal files then download twice.
 
-D10: The Telosnex release script runs `dart run prebuilt:check` for
+D10: The Telosnex release script runs `dart run kiln:check` for
      the resolved checkout of each package. The check fails if the source key
      is not equal to the manifest key, or if a manifest URL does not return
      its file.
@@ -184,7 +184,7 @@ D12: The manifest has a runtimeFiles section for files that do not depend
      the same entries.
      Instead of: models as code assets. Every app then contains every model.
 
-D13: The shared package has a runtime library, prebuilt/runtime.dart,
+D13: The shared package has a runtime library, kiln/runtime.dart,
      with no Flutter dependency. Apps use it for GPU packs and models. It
      downloads to a temporary file, gunzips if needed, checks the SHA-256,
      then renames the file into place. A file with the right SHA-256 is not
@@ -207,7 +207,7 @@ D11: Adoption order: webcrypto, fllama, image_ffmpeg, fonnx.
 I1: The hook publishes a prebuilt file only if its SHA-256 is equal to the
     manifest value.
     If violated: an app ships a file that its package source did not pin.
-    Pinned by: prebuilt test/fetch_test.dart and test/hook_test.dart
+    Pinned by: kiln test/fetch_test.dart and test/hook_test.dart
     ("I1: ..."): a changed cache entry, and a changed download.
 
 I2: The source key is equal on macOS, Linux and Windows for the same
@@ -215,30 +215,30 @@ I2: The source key is equal on macOS, Linux and Windows for the same
     If violated: auto builds from source on some hosts, and download fails
     there.
     Pinned by: the release workflow. Each build job saves
-    `prebuilt:key --list`, and the release job compares the lists
+    `kiln:key --list`, and the release job compares the lists
     with `diff` before it uploads (webcrypto.dart
     .github/workflows/native_release.yml). Unit test: git listing equals a
-    directory walk (prebuilt test/source_key_test.dart).
+    directory walk (kiln test/source_key_test.dart).
 
 I3: In mode auto, a change to a file that is not excluded (§5) makes the
     hook build from source.
     If violated: a local change has no effect, with no error (R3).
-    Pinned by: prebuilt test/source_key_test.dart,
+    Pinned by: kiln test/source_key_test.dart,
     test/hook_test.dart and test/end_to_end_test.dart.
 
 I4: Each manifest at a commit on the main branch refers only to files that
     exist and have the manifest SHA-256.
     If violated: builds from that commit fail in mode download, and
     released apps cannot download a GPU pack (fllama ADR 004 I1 then applies).
-    Pinned by: prebuilt:check on each pull request that changes a
+    Pinned by: kiln:check on each pull request that changes a
     manifest, and once a day on main.
 
 I5: The source build and the prebuilt build of one package give the same
     code asset IDs and the same file names, except the GPU pack files of D7.
     If violated: Dart code finds a library in one mode and not in the other.
-    Pinned by: `prebuilt:build` takes each `asset` from the hook
+    Pinned by: `kiln:build` takes each `asset` from the hook
     output of the release build, and download mode publishes that name.
-    prebuilt test/end_to_end_test.dart runs both modes.
+    kiln test/end_to_end_test.dart runs both modes.
 
 I6: All files of one target come from one hook run (fllama ADR 004 I5).
     If violated: files from two builds load in one process.
@@ -249,7 +249,7 @@ I6: All files of one target come from one hook run (fllama ADR 004 I5).
 I7: The runtime library never leaves a file at its final path unless the
     file has the expected SHA-256.
     If violated: an app loads a partial or changed model or GPU pack.
-    Pinned by: prebuilt test/fetch_test.dart ("I7: ..."): a cut
+    Pinned by: kiln test/fetch_test.dart ("I7: ..."): a cut
     download, a changed download, and a wrong file after gunzip.
 ```
 
@@ -260,8 +260,8 @@ pubspec:
 
 ```
 native_build: auto | download | source   # default auto
-native_release: <owner>/<repo>           # set only by prebuilt:build
-prebuilt_cache: <path>            # optional, changes the D9 cache
+native_release: <owner>/<repo>           # set only by kiln:build
+kiln_cache: <path>            # optional, changes the D9 cache
 ```
 
 `native_release` holds the repository of the release, so a release build
@@ -347,7 +347,7 @@ Runtime file release tag: `runtime-<first 16 hex>` of the SHA-256 over the
 lines `<name>\t<sha256>\n`, sorted by name. Asset name: `<name>.gz`. A new
 release has every file of the section, so an old app keeps its URLs.
 
-Generated Dart file: `lib/src/prebuilt.g.dart`, a const map
+Generated Dart file: `lib/src/kiln.g.dart`, a const map
 `prebuiltRuntimeFiles` from file name to `RuntimeFile`. lib/ is
 excluded from the source key.
 
@@ -370,13 +370,13 @@ line, with the same syntax (`dir/` or an exact path). That file is in the
 key. A package cannot remove the default excludes.
 
 The hook keeps the hash of each file with its size and modification time
-in `<user cache>/prebuilt/source_keys/`. It hashes again only the
+in `<user cache>/kiln/source_keys/`. It hashes again only the
 files that changed. fllama has 3,475 files and 177 MB, which take 1.7 s to
 hash. The commands always hash every file.
 
-Cache: `<user cache>/prebuilt/<sha256>/<file name>`, with the lock
+Cache: `<user cache>/kiln/<sha256>/<file name>`, with the lock
 `<sha256>.lock` next to it. A downloaded archive is at
-`<user cache>/prebuilt/<downloadSha256>/<file name>`. `<user cache>`
+`<user cache>/kiln/<downloadSha256>/<file name>`. `<user cache>`
 is `%LOCALAPPDATA%` on Windows, `~/Library/Caches` on macOS, and
 `$XDG_CACHE_HOME` or `~/.cache` on Linux. hooks_runner does not pass
 XDG_CACHE_HOME to hooks, so a hook on Linux uses `~/.cache`.
@@ -395,11 +395,11 @@ Release workflow runners:
 Commands of the shared package:
 
 ```
-dart run prebuilt:build --target <target> --out <dir>   # hook, mode source, native_release
-dart run prebuilt:release <dirs…>                       # upload, write prebuilt.json
-dart run prebuilt:check [--download]                    # D10, I2, I4
-dart run prebuilt:runtime_release <files…>              # D12
-dart run prebuilt:key [--list]                          # print the source key
+dart run kiln:build --target <target> --out <dir>   # hook, mode source, native_release
+dart run kiln:release <dirs…>                       # upload, write prebuilt.json
+dart run kiln:check [--download]                    # D10, I2, I4
+dart run kiln:runtime_release <files…>              # D12
+dart run kiln:key [--list]                          # print the source key
 ```
 
 `build` writes the files of one target and `target.json` to `--out`.
@@ -412,7 +412,7 @@ when every asset is there. A published release with that tag is final, so
 API, so it downloads nothing without `--download`. `key --list` prints the
 hashed lines, so two hosts can compare them with `diff` (I2).
 
-Shared package: `Telosnex/prebuilt` on GitHub, a git dependency of
+Shared package: `Telosnex/kiln` on GitHub, a git dependency of
 each package, pinned to a commit.
 
 ## 6. Non-goals
@@ -464,7 +464,7 @@ Ranked by irreversibility.
    inside a fixed runner label. A key that does not change can then get
    different bytes on the next release. This is not a problem, because each
    release records its own file hashes.
-6. **The hooks API changes.** `prebuilt:build` calls the hook of the
+6. **The hooks API changes.** `kiln:build` calls the hook of the
    package outside a Flutter build. A new `hooks` version can break that
    call. Workplan step 1 decides the method.
 7. **Windows ARM64 GPU SDKs on the runner.** fllama ADR 004 D12 is not decided.
@@ -480,14 +480,14 @@ Actions release runners never installed the Vulkan SDK. CMake stays,
 because Flutter's Windows and Linux desktop builds are CMake projects.
 The Windows release setup no longer installs NASM (only the BoringSSL
 source build used it) and no longer puts CMake on PATH. The
-`prebuilt:check` in `release.dart` already fails a release whose
+`kiln:check` in `release.dart` already fails a release whose
 manifest does not match its sources.
 
-1. **Done. Shared package.** Create `Telosnex/prebuilt`. Move the
+1. **Done. Shared package.** Create `Telosnex/kiln`. Move the
    download, lock and cache code from the fonnx hook. Add the manifest
    model, the source key, the mode resolution (D2), and the three commands
    (§5). Spike first: run the webcrypto hook for one target from
-   `prebuilt:build`, with no Flutter app. Record the method in §A.
+   `kiln:build`, with no Flutter app. Record the method in §A.
    Add unit tests for I1 and I3, and for the D2 modes.
 2. **Done. webcrypto.dart.** Add `.gitattributes`. Add mode resolution in front
    of the source build, with changes only in `hook/` (R11). Split its key
@@ -505,7 +505,7 @@ manifest does not match its sources.
 
    Done when the Windows x64 integration test passes in mode download with
    the pack from the release, and in mode source with the bundled backend.
-4. **Done. Telosnex check.** Add `prebuilt:check` for all four packages to
+4. **Done. Telosnex check.** Add `kiln:check` for all four packages to
    `dev/ci/releases/release.dart` (D10). Remove the Vulkan SDK and CMake
    requirements from the Telosnex release runners after step 6.
 5. **Done. image_ffmpeg.** Move its build scripts into the hook source build
@@ -535,7 +535,7 @@ manifest does not match its sources.
 - **One manifest format per package**, as now. Lost to D1. The fonnx
   `webAssets` and `runtimeConstraints` fields stay in its own
   `native_artifacts/manifest.json`.
-- **Step 1 spike (2026-10-05).** `prebuilt:build` can run a hook with
+- **Step 1 spike (2026-10-05).** `kiln:build` can run a hook with
   no Flutter app. It builds a `BuildInput` with `BuildInputBuilder` and
   `CodeAssetExtension` from `hooks` 1.0.3 and `code_assets` 1.0.0, and
   writes it to JSON. Like hooks_runner, it then runs
@@ -580,19 +580,19 @@ manifest does not match its sources.
   macOS 13 to every hook (flutter_tools `targetIOSVersion`,
   `targetMacOSVersion`). The fllama and webcrypto manifests have
   `minOSVersion` 15 for iOS, so in mode auto their iOS builds compile from
-  source. Fix: `defaultIOSVersion` 13 in prebuilt, then new releases
+  source. Fix: `defaultIOSVersion` 13 in kiln, then new releases
   of fllama and webcrypto.
 - 2026-10-05: Step 4 done (Telosnex `dev/ci/releases/native_prebuilt.dart`).
   Each release job runs `release.dart native` after pub get and before the
   build. D10: the check runs for every resolved package whose pubspec
-  depends on prebuilt, not for a fixed list. It runs `bin/check.dart`
-  of the resolved prebuilt with the app package config, because
+  depends on kiln, not for a fixed list. It runs `bin/check.dart`
+  of the resolved kiln with the app package config, because
   `dart run` runs only executables of direct dependencies. The step gets
   `github.token` for the GitHub API rate limit. With fllama `main` and
   webcrypto `telosnex_main`, the check passes from the pub cache on macOS,
   and on Windows with `core.autocrlf=true`. A local change fails it.
   Telosnex still resolves fllama `c0e48fe` and webcrypto `d46233b`, which
-  do not use prebuilt, so the check covers no package until
+  do not use kiln, so the check covers no package until
   Telosnex upgrades them.
 - 2026-10-05: Step 3 done (fllama branch `native-prebuilt`, release
   `native-a1adfee740569cc5`, 12 targets, 51 files). The Windows x64
@@ -616,8 +616,8 @@ manifest does not match its sources.
   because workflow_dispatch needs the file on the default branch. Build
   output goes to `RUNNER_TEMP`, because untracked files count in the key.
   Android targets pass the NDK version to native_toolchain_cmake with
-  `prebuilt:build --define`.
-- 2026-10-05: Step 1 done (Telosnex/prebuilt). D3: git lists the
+  `kiln:build --define`.
+- 2026-10-05: Step 1 done (Telosnex/kiln). D3: git lists the
   files, lib/ and top-level dot names are excluded, package excludes are in
   `source_excludes.txt`. D12: the command writes the Dart file, not the
   hook. §5: `native_release` holds the repository; manifest fields `asset`
@@ -636,7 +636,7 @@ manifest does not match its sources.
   New immutable releases: fllama `native-0ca5c1a22d0af063` (51 files),
   webcrypto `native-9366b7f0cd50b313` (12 files), image_ffmpeg
   `native-845e97ea23feb5e6` (12 files). All three release workflows pass
-  for all 12 targets. Each package passes `prebuilt:check`.
+  for all 12 targets. Each package passes `kiln:check`.
 
   The three iOS targets of each package pass actual hook runs in auto and
   download modes with a request for iOS 13. Every published file matches
@@ -645,7 +645,7 @@ manifest does not match its sources.
   no source fallback for these packages.
 - 2026-10-05: Android release stripping approved and complete. The hook
   strips only published Android release copies with the NDK tool selected
-  by CMake, before prebuilt hashes them. Developer source builds and
+  by CMake, before kiln hashes them. Developer source builds and
   cached libraries retain debug information. CI saves the unstripped Android
   libraries as separate `debug-symbols-<target>` artifacts for 90 days.
 
@@ -697,11 +697,11 @@ manifest does not match its sources.
 
   Example/conformance files stay in the repository. Telosnex's move away
   from bundled models needs its separate ADR. A fresh app resolves one
-  prebuilt commit for all four packages, and the Telosnex release
+  kiln commit for all four packages, and the Telosnex release
   check passes for all four. The daily and manifest-PR checks pin I4.
 - 2026-10-06: D7 exception for the fllama CUDA pack (fllama ADR 004 D16). Its
   files are in `cuda-<target>-<key16>` releases, not in the native release
-  or in prebuilt.json. `prebuilt:check` does not check them. The
+  or in prebuilt.json. `kiln:check` does not check them. The
   fllama release workflow checks their digests before it builds (fllama ADR 004
   I11).
 - 2026-10-06: Status says implemented. The workplan marks steps 1 to 6

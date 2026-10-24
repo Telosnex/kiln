@@ -14,7 +14,7 @@ const flatpakArches = {'linux-arm64': 'aarch64', 'linux-x64': 'x86_64'};
 final class FlatpakOptions {
   const FlatpakOptions({
     this.fromSource = false,
-    this.cacheDest = 'home/.cache/prebuilt',
+    this.cacheDest = 'home/.cache/kiln',
     this.cargoVendorDest = 'cargo/vendor',
     this.cargoHomeDest = 'home/.cargo',
     this.buildRoot = '/run/build/app',
@@ -25,9 +25,9 @@ final class FlatpakOptions {
   /// place the prebuilt files.
   final bool fromSource;
 
-  /// The prebuilt cache, relative to the module's build directory.
+  /// The kiln cache, relative to the module's build directory.
   /// The manifest must set HOME so that the hooks use it
-  /// (`home/.cache/prebuilt` with HOME=<build dir>/home).
+  /// (`home/.cache/kiln` with HOME=<build dir>/home).
   final String cacheDest;
   final String cargoVendorDest;
   final String cargoHomeDest;
@@ -46,7 +46,7 @@ final class FlatpakPackage {
 
 /// The packages of the app at [app] that have a prebuilt manifest, from its
 /// `.dart_tool/package_config.json` (run `pub get` first).
-Future<List<FlatpakPackage>> prebuiltPackages(Directory app) async {
+Future<List<FlatpakPackage>> kilnPackages(Directory app) async {
   final configFile = File(
     p.join(app.path, '.dart_tool', 'package_config.json'),
   );
@@ -180,14 +180,14 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
       } else if (lower.endsWith('.gz')) {
         final sha = file['sha256'] as String;
         final name = file['name'] as String;
-        final staged = '.prebuilt_downloads/$download.gz';
+        final staged = '.kiln_downloads/$download.gz';
         sources
           ..add({
             'type': 'file',
             'only-arches': [arch],
             'url': url,
             'sha256': download,
-            'dest': '.prebuilt_downloads',
+            'dest': '.kiln_downloads',
             'dest-filename': '$download.gz',
           })
           ..add({
