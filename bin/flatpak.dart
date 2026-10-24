@@ -23,9 +23,9 @@ Future<void> main(List<String> arguments) => runCommand(
     )
     ..addOption(
       'cache-dest',
-      defaultsTo: 'home/.cache/native_prebuilt',
+      defaultsTo: 'home/.cache/prebuilt',
       help:
-          'The native_prebuilt cache relative to the build directory. The '
+          'The prebuilt cache relative to the build directory. The '
           'manifest sets HOME to match.',
     ),
   'dart run prebuilt:flatpak --out sources.json [--source]\n'

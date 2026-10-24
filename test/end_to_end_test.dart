@@ -122,7 +122,7 @@ void main() {
       packageRoot: package.uri,
       packageName: 'fake_native',
       target: target,
-      defines: {'native_prebuilt_cache': cache.path, ...defines},
+      defines: {'prebuilt_cache': cache.path, ...defines},
     );
     return File.fromUri(output.assets.code.single.file!).readAsString();
   }
@@ -231,7 +231,7 @@ void main() {
           packageName: 'fake_native',
           target: ios,
           iOSVersion: 13,
-          defines: {'native_build': mode, 'native_prebuilt_cache': cache.path},
+          defines: {'native_build': mode, 'prebuilt_cache': cache.path},
         );
         expect(
           await File.fromUri(output.assets.code.single.file!).readAsString(),

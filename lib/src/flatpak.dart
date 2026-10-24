@@ -14,7 +14,7 @@ const flatpakArches = {'linux-arm64': 'aarch64', 'linux-x64': 'x86_64'};
 final class FlatpakOptions {
   const FlatpakOptions({
     this.fromSource = false,
-    this.cacheDest = 'home/.cache/native_prebuilt',
+    this.cacheDest = 'home/.cache/prebuilt',
     this.cargoVendorDest = 'cargo/vendor',
     this.cargoHomeDest = 'home/.cargo',
     this.buildRoot = '/run/build/app',
@@ -25,9 +25,9 @@ final class FlatpakOptions {
   /// place the prebuilt files.
   final bool fromSource;
 
-  /// The native_prebuilt cache, relative to the module's build directory.
+  /// The prebuilt cache, relative to the module's build directory.
   /// The manifest must set HOME so that the hooks use it
-  /// (`home/.cache/native_prebuilt` with HOME=<build dir>/home).
+  /// (`home/.cache/prebuilt` with HOME=<build dir>/home).
   final String cacheDest;
   final String cargoVendorDest;
   final String cargoHomeDest;
@@ -180,14 +180,14 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
       } else if (lower.endsWith('.gz')) {
         final sha = file['sha256'] as String;
         final name = file['name'] as String;
-        final staged = '.native_prebuilt_downloads/$download.gz';
+        final staged = '.prebuilt_downloads/$download.gz';
         sources
           ..add({
             'type': 'file',
             'only-arches': [arch],
             'url': url,
             'sha256': download,
-            'dest': '.native_prebuilt_downloads',
+            'dest': '.prebuilt_downloads',
             'dest-filename': '$download.gz',
           })
           ..add({

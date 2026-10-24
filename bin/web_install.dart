@@ -19,7 +19,7 @@ Future<void> main(List<String> arguments) => runCommand(
     ),
   'dart run prebuilt:web_install [options]\n'
   'Installs the web files of each dependency that has web.json into '
-  'web/native_prebuilt/, as the build hooks do (ADR 002 D9).',
+  'web/prebuilt/, as the build hooks do (ADR 002 D9).',
   (args) async {
     final local = <String, Directory>{};
     for (final spec in args.multiOption('local')) {

@@ -92,7 +92,7 @@ void main() {
   }
 
   Directory installed() =>
-      Directory(p.join(app.path, 'web', 'native_prebuilt', 'fake_native'));
+      Directory(p.join(app.path, 'web', 'prebuilt', 'fake_native'));
 
   Future<BuildOutput> runWeb({Map<String, Object> defines = const {}}) async {
     final output = BuildOutputBuilder();
@@ -204,7 +204,7 @@ void main() {
         cacheRoot: cache,
       ).installWeb();
       expect(
-        Directory(p.join(app.path, 'web', 'native_prebuilt')).existsSync(),
+        Directory(p.join(app.path, 'web', 'prebuilt')).existsSync(),
         isFalse,
       );
     });
@@ -225,7 +225,7 @@ void main() {
       });
       expect(
         File(
-          p.join(app.path, 'web', 'native_prebuilt', '.gitignore'),
+          p.join(app.path, 'web', 'prebuilt', '.gitignore'),
         ).readAsStringSync(),
         '*\n',
       );
@@ -255,6 +255,29 @@ void main() {
       await writeFiles(installed(), {'stale.js': 'old'});
       await runWeb();
       expect((await installedFiles()).keys, isNot(contains('stale.js')));
+    });
+
+    test('download deletes the install from before the rename', () async {
+      await writeWebManifest();
+      final legacyRoot = Directory(p.join(app.path, 'web', 'native_prebuilt'));
+      await writeFiles(legacyRoot, {
+        '.gitignore': '*\n',
+        'fake_native/fake.wasm': 'old',
+        'other/other.wasm': 'other',
+      });
+      await runWeb();
+      expect(
+        Directory(p.join(legacyRoot.path, 'fake_native')).existsSync(),
+        isFalse,
+      );
+      expect(
+        File(p.join(legacyRoot.path, 'other', 'other.wasm')).existsSync(),
+        isTrue,
+      );
+
+      await Directory(p.join(legacyRoot.path, 'other')).delete(recursive: true);
+      await runWeb();
+      expect(legacyRoot.existsSync(), isFalse);
     });
 
     test('download: a wrong SHA-256 fails and installs nothing', () async {
@@ -328,9 +351,7 @@ void main() {
       await runWeb(defines: {'web_root': other.path});
       expect(
         (await installedFiles(
-          Directory(
-            p.join(other.path, 'web', 'native_prebuilt', 'fake_native'),
-          ),
+          Directory(p.join(other.path, 'web', 'prebuilt', 'fake_native')),
         )).keys,
         hasLength(3),
       );
@@ -467,11 +488,39 @@ void main() {
       final again = File(p.join(libWeb.path, '.gitignore')).readAsStringSync();
       expect(again, isNot(contains('module.mjs')));
       expect(
-        RegExp('# native_prebuilt web install-dev:').allMatches(again),
+        RegExp('# prebuilt web install-dev:').allMatches(again),
         hasLength(1),
       );
     });
   });
+
+  test(
+    'install-dev replaces the .gitignore block from before the rename',
+    () async {
+      await writeWebManifest();
+      await writeFiles(package, {
+        'lib/web/.gitignore':
+            '/own.txt\n\n'
+            '# native_prebuilt web install-dev: generated, do not edit.\n'
+            '/.native_prebuilt_web_version\n'
+            '/fake.wasm\n'
+            '# End of native_prebuilt web install-dev.\n',
+        'lib/web/.native_prebuilt_web_version': 'old\n',
+      });
+      await installDev(packageRoot: package.uri, cacheRoot: cache);
+      final libWeb = Directory.fromUri(package.uri.resolve('lib/web/'));
+      final gitignore = File(
+        p.join(libWeb.path, '.gitignore'),
+      ).readAsStringSync();
+      expect(gitignore, startsWith('/own.txt\n'));
+      expect(gitignore, isNot(contains('native_prebuilt')));
+      expect(gitignore, contains('# prebuilt web install-dev:'));
+      expect(
+        File(p.join(libWeb.path, '.native_prebuilt_web_version')).existsSync(),
+        isFalse,
+      );
+    },
+  );
 
   group('release and check', () {
     late FakePublisher publisher;

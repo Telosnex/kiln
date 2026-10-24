@@ -229,7 +229,7 @@ checksum = "${'e' * 64}"
         'url': 'https://x/lib.git',
         'commit': 'a' * 40,
         'disable-submodules': true,
-        'dest': 'home/.cache/native_prebuilt/sources/lib-${'a' * 16}',
+        'dest': 'home/.cache/prebuilt/sources/lib-${'a' * 16}',
       });
       expect(sources[1]['only-arches'], ['aarch64']);
       expect(sources[1]['dest-filename'], 'ort-arm.tgz');

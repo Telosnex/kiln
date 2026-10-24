@@ -1,6 +1,6 @@
 # Builds without network (Flatpak, Flathub)
 
-> The package was named `native_prebuilt` before 0.1.0. File, directory and user define names that contain `native_prebuilt` keep that name.
+> The package was named `native_prebuilt` before 0.1.0.
 
 Flathub builds offline and from source. prebuilt supports that with
 four pieces; together they let a packager generate every source a build
@@ -35,7 +35,7 @@ it there. Do not fetch upstream code any other way.
 A package's own user define wins. Hooks get only a few environment
 variables (HOME, PATH, ...), so this file is the switch for a build that
 cannot edit the app's pubspec. With HOME=<build dir>/home it is
-`<build dir>/home/.cache/native_prebuilt/defaults.json`.
+`<build dir>/home/.cache/prebuilt/defaults.json`.
 
 ## 3. `host_toolchain`
 

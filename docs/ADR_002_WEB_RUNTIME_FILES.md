@@ -1,6 +1,6 @@
 # ADR 002 — Web runtime files built by Actions and installed by the package hook
 
-> The package was named `native_prebuilt` before 0.1.0. File, directory and user define names that contain `native_prebuilt` keep that name.
+> The package was named `native_prebuilt` before 0.1.0. The progress notes and the decision log keep the old names.
 
 Status: ACCEPTED (2026-10-12)
 
@@ -104,9 +104,9 @@ Telosnex adoption plan, with the choices of each package.
 
 ```
 D1: The build hook of each package installs the web runtime files of the
-    package into <app>/web/native_prebuilt/<package>/, for a web build.
+    package into <app>/web/prebuilt/<package>/, for a web build.
     The web build then copies them to build/web like any web/ file (§1.2).
-    The hook writes <app>/web/native_prebuilt/.gitignore with the content
+    The hook writes <app>/web/prebuilt/.gitignore with the content
     "*", so the app repository needs no change.
     Because: R1, R2, R3, R7
     Instead of: hook data assets. Flutter stable does not bundle them
@@ -196,7 +196,7 @@ D7: Each package loads every web runtime file with the query
     fix that keeps the ABI.
 
 D8: Each package loads its web runtime from Dart at first use, from
-    native_prebuilt/<package>/ relative to the document base URI. Packages
+    prebuilt/<package>/ relative to the document base URI. Packages
     remove their web files from flutter.assets. An app adds no file to
     web/ and no tag to index.html for a package runtime. fonnx and fllama
     change to do this.
@@ -230,7 +230,7 @@ D13: The command `dart run prebuilt:web install-dev [--from <dir>]`,
     in web.json and verifies them, as download mode does. With --from, it
     copies a local build and does not verify hashes, as local mode does.
     It adds the generated names to lib/web/.gitignore and writes the
-    installed webVersion to lib/web/.native_prebuilt_web_version. It runs
+    installed webVersion to lib/web/.prebuilt_web_version. It runs
     no tests. The package selects its browsers and compilers, or has no
     browser tests.
     Because: R4, R8. A package test cannot use D2, because `dart test -p
@@ -280,7 +280,7 @@ I3: Every request that a package makes for a web runtime file has the query
     Pinned by: a browser test in each package that records the requests,
     as browser_smoke.mjs in the prototype does (planned).
 
-I4: A Telosnex web build contains, under native_prebuilt/<package>/, each
+I4: A Telosnex web build contains, under prebuilt/<package>/, each
     web.json file of each resolved package, with its SHA-256.
     If violated: Flutter no longer runs the hook before it copies web/, or
     the hook failed silently. The web build has missing or old files (D1).
@@ -310,7 +310,7 @@ it, as it excludes `prebuilt.json`.
 }
 ```
 
-- `name`: the path under `web/native_prebuilt/<package>/`, with `/`.
+- `name`: the path under `web/prebuilt/<package>/`, with `/`.
 - `source: "release"`: a generated file. The release asset is the gzip of
   the file, named `web-<name with "/" replaced by "__">.gz`. `url` is the
   asset URL, and `downloadSha256` is the SHA-256 of the gzip. The hook
@@ -326,8 +326,8 @@ Generated Dart file: `lib/src/web_runtime.g.dart`, with
 `const webRuntimeVersion = '<16 hex>';`. The release workflow and
 `web stamp` write it. The source key excludes `lib/`.
 
-Install directory in the app: `web/native_prebuilt/<package>/`. The browser
-URL is `native_prebuilt/<package>/<name>?v=<webVersion>`, relative to the
+Install directory in the app: `web/prebuilt/<package>/`. The browser
+URL is `prebuilt/<package>/<name>?v=<webVersion>`, relative to the
 document base URI. The name avoids `packages/`, which the debug server uses
 for Dart sources.
 
@@ -387,7 +387,7 @@ NG5: Byte-identical web builds.
 
 NG6: Removal of the install directory of a package that the app no longer
      depends on. No hook of that package runs, so its files stay in
-     web/native_prebuilt/ and in build/web.
+     web/prebuilt/ and in build/web.
      Reopens when: a removed package leaves files in a Telosnex release.
      The I4 check can then fail on an unknown directory.
 ```
@@ -425,7 +425,7 @@ Ranked by irreversibility.
    package:test serves from `lib/web/`. So the package runs `web
    install-dev` first (D13). Without it, the tests fail because the files
    are missing. Old files from an earlier install can pass. A package
-   test can compare `lib/web/.native_prebuilt_web_version` with the
+   test can compare `lib/web/.prebuilt_web_version` with the
    generated webVersion to catch this.
 
 ## 8. Workplan
@@ -447,7 +447,7 @@ Ranked by irreversibility.
    `source_excludes.txt`. Run `web install-dev` before the
    browser tests in `tool/test_all.sh`, and convert that script to Dart.
    Call the install function from `hook/build.dart`. Load from
-   `native_prebuilt/zxing_dart/` with `?v=` on the worker, loader, module
+   `prebuilt/zxing_dart/` with `?v=` on the worker, loader, module
    and .wasm requests (D7, D8, I3). Remove `lib/web` from `flutter.assets`
    and delete the generated files from git. Add the web job (D10). Make a
    release. Done when Telosnex web builds with the released files after

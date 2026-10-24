@@ -27,10 +27,14 @@ enum WebBuildMode {
 
 /// Directory in the app `web/` directory that holds the package
 /// directories (ADR 002 §5).
-const webInstallDirectoryName = 'native_prebuilt';
+const webInstallDirectoryName = 'prebuilt';
+
+/// The [webInstallDirectoryName] of the package before its rename from
+/// native_prebuilt. An install deletes the package directory under it.
+const legacyWebInstallDirectoryName = 'native_prebuilt';
 
 /// Version file that `web install-dev` writes (ADR 002 D13).
-const devVersionFileName = '.native_prebuilt_web_version';
+const devVersionFileName = '.prebuilt_web_version';
 
 /// The web files of one package, ready to install.
 final class WebFileSet {
@@ -244,7 +248,32 @@ Future<List<File>> installWebDirectory(
     }
     log?.call('Installed ${files.length} web files in ${destination.path}');
   });
+  await _deleteLegacyInstall(destination, log);
   return installed;
+}
+
+/// Deletes `web/native_prebuilt/<package>/`, the install directory of the
+/// package before the rename, and `web/native_prebuilt/` when it then holds
+/// only its `.gitignore`.
+Future<void> _deleteLegacyInstall(
+  Directory destination,
+  void Function(String message)? log,
+) async {
+  final web = destination.parent.parent;
+  if (p.basename(destination.parent.path) != webInstallDirectoryName) return;
+  final legacyRoot = Directory(p.join(web.path, legacyWebInstallDirectoryName));
+  final legacy = Directory(
+    p.join(legacyRoot.path, p.basename(destination.path)),
+  );
+  if (await legacy.exists()) {
+    await legacy.delete(recursive: true);
+    log?.call('Deleted the old install directory ${legacy.path}');
+  }
+  if (!await legacyRoot.exists()) return;
+  final left = await legacyRoot.list().map((e) => p.basename(e.path)).toList();
+  if (left.every((name) => name == '.gitignore')) {
+    await legacyRoot.delete(recursive: true);
+  }
 }
 
 /// Whether [directory] holds exactly [files], with equal contents.
@@ -263,9 +292,14 @@ Future<bool> _holds(Directory directory, Map<String, File> files) async {
   return true;
 }
 
-const _gitignoreStart =
+const _gitignoreStart = '# prebuilt web install-dev: generated, do not edit.';
+const _gitignoreEnd = '# End of prebuilt web install-dev.';
+
+/// The markers before the rename from native_prebuilt. `web install-dev`
+/// replaces a block with these markers.
+const _legacyGitignoreStart =
     '# native_prebuilt web install-dev: generated, do not edit.';
-const _gitignoreEnd = '# End of native_prebuilt web install-dev.';
+const _legacyGitignoreEnd = '# End of native_prebuilt web install-dev.';
 
 /// `web install-dev` (ADR 002 D13): copies [set] into the `lib/web/`
 /// directory of the package at [packageRoot], for the package tests.
@@ -285,8 +319,12 @@ Future<void> installDevWebFiles(
   final lines = await gitignore.exists()
       ? await gitignore.readAsLines()
       : <String>[];
-  final start = lines.indexOf(_gitignoreStart);
-  final end = lines.indexOf(_gitignoreEnd);
+  var start = lines.indexOf(_gitignoreStart);
+  var end = lines.indexOf(_gitignoreEnd);
+  if (start < 0) {
+    start = lines.indexOf(_legacyGitignoreStart);
+    end = lines.indexOf(_legacyGitignoreEnd);
+  }
   final hasBlock = start >= 0 && end > start;
   final previous = hasBlock
       ? lines.sublist(start + 1, end).map((l) => l.substring(1)).toSet()

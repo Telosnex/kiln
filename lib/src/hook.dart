@@ -123,7 +123,7 @@ final class Prebuilt {
     this.httpClient,
   }) : cacheRoot =
            cacheRoot ??
-           switch (input.userDefines.path('native_prebuilt_cache')) {
+           switch (input.userDefines.path('prebuilt_cache')) {
              final Uri path => Directory.fromUri(path),
              null => defaultCacheRoot(),
            };
@@ -133,7 +133,7 @@ final class Prebuilt {
 
   final void Function(String message)? log;
 
-  /// The shared cache (ADR 001 D9). The user define `native_prebuilt_cache`
+  /// The shared cache (ADR 001 D9). The user define `prebuilt_cache`
   /// (a path relative to the pubspec) changes it.
   final Directory cacheRoot;
   final HttpClient? httpClient;
@@ -230,7 +230,7 @@ final class Prebuilt {
   }
 
   /// Installs the web runtime files of the package into
-  /// `<app>/web/native_prebuilt/<package>/` (ADR 002 D1, D2, D4).
+  /// `<app>/web/prebuilt/<package>/` (ADR 002 D1, D2, D4).
   ///
   /// Does nothing if the build requests code assets, or if the package has
   /// no web.json and the user define web_build is not local. The user

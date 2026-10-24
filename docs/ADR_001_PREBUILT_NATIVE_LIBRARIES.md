@@ -1,6 +1,6 @@
 # ADR 001 — Prebuilt native libraries, built by the same hook code that builds from source
 
-> The package was named `native_prebuilt` before 0.1.0. File, directory and user define names that contain `native_prebuilt` keep that name.
+> The package was named `native_prebuilt` before 0.1.0. The progress notes and the decision log keep the old names.
 
 Status: ACCEPTED (2026-10-05), implemented (steps 1 to 6 done, 2026-10-05)
 
@@ -159,7 +159,7 @@ D8: The workflow builds each target on a fixed GitHub runner (§5). Linux
     change in the package.
 
 D9: Downloads go to one cache for all packages:
-    <user cache>/native_prebuilt/<sha256>/<file name>. A file lock protects
+    <user cache>/prebuilt/<sha256>/<file name>. A file lock protects
     each entry. The hook checks the SHA-256 after each download, and before
     it publishes a file from the cache.
     Because: R5
@@ -261,7 +261,7 @@ pubspec:
 ```
 native_build: auto | download | source   # default auto
 native_release: <owner>/<repo>           # set only by prebuilt:build
-native_prebuilt_cache: <path>            # optional, changes the D9 cache
+prebuilt_cache: <path>            # optional, changes the D9 cache
 ```
 
 `native_release` holds the repository of the release, so a release build
@@ -347,8 +347,8 @@ Runtime file release tag: `runtime-<first 16 hex>` of the SHA-256 over the
 lines `<name>\t<sha256>\n`, sorted by name. Asset name: `<name>.gz`. A new
 release has every file of the section, so an old app keeps its URLs.
 
-Generated Dart file: `lib/src/native_prebuilt.g.dart`, a const map
-`nativePrebuiltRuntimeFiles` from file name to `RuntimeFile`. lib/ is
+Generated Dart file: `lib/src/prebuilt.g.dart`, a const map
+`prebuiltRuntimeFiles` from file name to `RuntimeFile`. lib/ is
 excluded from the source key.
 
 Source key: SHA-256 over the lines `<path>\t<SHA-256 of the file>\n`, sorted
@@ -370,13 +370,13 @@ line, with the same syntax (`dir/` or an exact path). That file is in the
 key. A package cannot remove the default excludes.
 
 The hook keeps the hash of each file with its size and modification time
-in `<user cache>/native_prebuilt/source_keys/`. It hashes again only the
+in `<user cache>/prebuilt/source_keys/`. It hashes again only the
 files that changed. fllama has 3,475 files and 177 MB, which take 1.7 s to
 hash. The commands always hash every file.
 
-Cache: `<user cache>/native_prebuilt/<sha256>/<file name>`, with the lock
+Cache: `<user cache>/prebuilt/<sha256>/<file name>`, with the lock
 `<sha256>.lock` next to it. A downloaded archive is at
-`<user cache>/native_prebuilt/<downloadSha256>/<file name>`. `<user cache>`
+`<user cache>/prebuilt/<downloadSha256>/<file name>`. `<user cache>`
 is `%LOCALAPPDATA%` on Windows, `~/Library/Caches` on macOS, and
 `$XDG_CACHE_HOME` or `~/.cache` on Linux. hooks_runner does not pass
 XDG_CACHE_HOME to hooks, so a hook on Linux uses `~/.cache`.

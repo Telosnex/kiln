@@ -22,7 +22,7 @@ import 'web_tool.dart';
 const targetDescriptionName = 'target.json';
 
 /// Path of the Dart file that `prebuilt:runtime_release` writes.
-const runtimeDartPath = 'lib/src/native_prebuilt.g.dart';
+const runtimeDartPath = 'lib/src/prebuilt.g.dart';
 
 /// Oldest macOS version of release builds.
 const defaultMacOSVersion = 12;
@@ -685,7 +685,7 @@ String runtimeFilesDart(RuntimeFileSet set) {
     ..writeln("import 'package:prebuilt/runtime.dart';")
     ..writeln()
     ..writeln('/// Runtime files of this package, by file name.')
-    ..writeln('const nativePrebuiltRuntimeFiles = <String, RuntimeFile>{');
+    ..writeln('const prebuiltRuntimeFiles = <String, RuntimeFile>{');
   for (final file in set.files) {
     buffer
       ..writeln('  ${literal(file.name)}: RuntimeFile(')
