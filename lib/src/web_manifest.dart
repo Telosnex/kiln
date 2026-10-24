@@ -213,7 +213,7 @@ final class WebManifest {
     if (checkVersion && json['webVersion'] != manifest.webVersion) {
       throw FormatException(
         'web.json: webVersion ${json['webVersion']} does not match its '
-        'files (${manifest.webVersion}). Run "dart run native_prebuilt:web '
+        'files (${manifest.webVersion}). Run "dart run prebuilt:web '
         'stamp".',
       );
     }

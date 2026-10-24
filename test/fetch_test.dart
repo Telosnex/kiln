@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:native_prebuilt/native_prebuilt.dart';
-import 'package:native_prebuilt/runtime.dart';
-import 'package:native_prebuilt/src/hashing.dart';
+import 'package:prebuilt/prebuilt.dart';
+import 'package:prebuilt/runtime.dart';
+import 'package:prebuilt/src/hashing.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

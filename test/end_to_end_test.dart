@@ -5,10 +5,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
-import 'package:native_prebuilt/native_prebuilt.dart';
-import 'package:native_prebuilt/src/hashing.dart';
-import 'package:native_prebuilt/src/publisher.dart';
-import 'package:native_prebuilt/src/release_tool.dart';
+import 'package:prebuilt/prebuilt.dart';
+import 'package:prebuilt/src/hashing.dart';
+import 'package:prebuilt/src/publisher.dart';
+import 'package:prebuilt/src/release_tool.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -54,12 +54,12 @@ import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
-import 'package:native_prebuilt/native_prebuilt.dart';
+import 'package:prebuilt/prebuilt.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (!input.config.buildCodeAssets) return;
-    await NativePrebuilt(input: input, output: output).run((source) async {
+    await Prebuilt(input: input, output: output).run((source) async {
       final release = source.release;
       final name = input.config.code.targetOS.dylibFileName('fake');
       final file = File.fromUri(input.outputDirectory.resolve(name));
@@ -103,7 +103,7 @@ void main() {
           'environment:\n  sdk: ^3.10.0\n'
           'dependencies:\n'
           '  code_assets: any\n  hooks: any\n'
-          '  native_prebuilt:\n    path: ${jsonEncode(self)}\n',
+          '  prebuilt:\n    path: ${jsonEncode(self)}\n',
       'hook/build.dart': hookSource,
       'src/fake.c': 'int fake(void) { return 1; }\n',
       '.gitignore': '.dart_tool/\npubspec.lock\n',

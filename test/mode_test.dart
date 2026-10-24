@@ -1,5 +1,5 @@
 import 'package:code_assets/code_assets.dart';
-import 'package:native_prebuilt/native_prebuilt.dart';
+import 'package:prebuilt/prebuilt.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 /// A temporary directory deleted after the test.
 Future<Directory> tempDir() async {
-  final dir = await Directory.systemTemp.createTemp('native_prebuilt_test_');
+  final dir = await Directory.systemTemp.createTemp('prebuilt_test_');
   addTearDown(() => dir.delete(recursive: true));
   return Directory(dir.resolveSymbolicLinksSync());
 }

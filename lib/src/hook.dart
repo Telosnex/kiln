@@ -45,7 +45,7 @@ final class PrebuiltRelease {
       _runtimeFiles.add({'file': file.toFilePath(), 'pack': ?pack});
 }
 
-/// What a source build gets from [NativePrebuilt.run].
+/// What a source build gets from [Prebuilt.run].
 final class SourceBuild {
   SourceBuild._({
     required this.sourceKey,
@@ -109,13 +109,13 @@ final class SourceBuild {
 ///
 /// ```dart
 /// await build(args, (input, output) async {
-///   final prebuilt = NativePrebuilt(input: input, output: output);
+///   final prebuilt = Prebuilt(input: input, output: output);
 ///   if (!input.config.buildCodeAssets) return prebuilt.installWeb();
 ///   await prebuilt.run((source) => buildFromSource(input, output, source));
 /// });
 /// ```
-final class NativePrebuilt {
-  NativePrebuilt({
+final class Prebuilt {
+  Prebuilt({
     required this.input,
     required this.output,
     this.log,

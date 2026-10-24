@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:hooks/hooks.dart';
-import 'package:native_prebuilt/native_prebuilt.dart';
-import 'package:native_prebuilt/src/hashing.dart';
-import 'package:native_prebuilt/src/release_tool.dart';
-import 'package:native_prebuilt/src/web_install.dart';
-import 'package:native_prebuilt/src/web_tool.dart';
+import 'package:prebuilt/prebuilt.dart';
+import 'package:prebuilt/src/hashing.dart';
+import 'package:prebuilt/src/release_tool.dart';
+import 'package:prebuilt/src/web_install.dart';
+import 'package:prebuilt/src/web_tool.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -96,7 +96,7 @@ void main() {
 
   Future<BuildOutput> runWeb({Map<String, Object> defines = const {}}) async {
     final output = BuildOutputBuilder();
-    await NativePrebuilt(
+    await Prebuilt(
       input: webBuildInput(package, app, defines: defines),
       output: output,
       cacheRoot: cache,
@@ -198,7 +198,7 @@ void main() {
     test('a code-asset build installs nothing', () async {
       await writeWebManifest();
       final output = BuildOutputBuilder();
-      await NativePrebuilt(
+      await Prebuilt(
         input: await buildInput(package),
         output: output,
         cacheRoot: cache,

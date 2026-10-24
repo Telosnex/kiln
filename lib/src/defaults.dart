@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-/// Defaults for the user defines of every native_prebuilt package, in
+/// Defaults for the user defines of every prebuilt package, in
 /// `<cache root>/defaults.json`:
 ///
 /// ```json

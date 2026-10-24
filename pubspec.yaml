@@ -1,8 +1,7 @@
-name: native_prebuilt
-description: Prebuilt native libraries for Dart build hooks, built by the same hook code that builds from source. See docs/ADR_001_PREBUILT_NATIVE_LIBRARIES.md.
+name: prebuilt
+description: Prebuilt native libraries and web runtime files for Dart build hooks, built by the same hook code that builds from source.
 version: 0.1.0
-publish_to: none
-repository: https://github.com/Telosnex/native_prebuilt
+repository: https://github.com/Telosnex/prebuilt
 
 environment:
   sdk: ^3.10.0

@@ -37,7 +37,7 @@ final class FlatpakOptions {
   final String buildRoot;
 }
 
-/// A package of the app with native_prebuilt files.
+/// A package of the app with prebuilt files.
 final class FlatpakPackage {
   FlatpakPackage(this.name, this.root);
   final String name;
@@ -46,7 +46,7 @@ final class FlatpakPackage {
 
 /// The packages of the app at [app] that have a prebuilt manifest, from its
 /// `.dart_tool/package_config.json` (run `pub get` first).
-Future<List<FlatpakPackage>> nativePrebuiltPackages(Directory app) async {
+Future<List<FlatpakPackage>> prebuiltPackages(Directory app) async {
   final configFile = File(
     p.join(app.path, '.dart_tool', 'package_config.json'),
   );

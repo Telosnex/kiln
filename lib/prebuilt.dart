@@ -7,7 +7,7 @@ export 'src/cache.dart' show defaultCacheRoot;
 export 'src/defaults.dart'
     show StandardDefines, UserDefineDefaults, defaultsFileName;
 export 'src/fetch.dart' show FetchException, FetchSpec, fetchVerified;
-export 'src/hook.dart' show NativePrebuilt, PrebuiltRelease, SourceBuild;
+export 'src/hook.dart' show Prebuilt, PrebuiltRelease, SourceBuild;
 export 'src/manifest.dart';
 export 'src/mode.dart';
 export 'src/pinned_sources.dart'

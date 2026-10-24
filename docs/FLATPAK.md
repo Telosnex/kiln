@@ -1,6 +1,8 @@
 # Builds without network (Flatpak, Flathub)
 
-Flathub builds offline and from source. native_prebuilt supports that with
+> The package was named `native_prebuilt` before 0.1.0. File, directory and user define names that contain `native_prebuilt` keep that name.
+
+Flathub builds offline and from source. prebuilt supports that with
 four pieces; together they let a packager generate every source a build
 hook needs, with no package-specific manifest entries.
 
@@ -44,7 +46,7 @@ to fill. Cargo reads vendored crates from `$HOME/.cargo/config.toml`.
 ## 4. The generator
 
 ```sh
-dart run native_prebuilt:flatpak --app <app> --source \
+dart run prebuilt:flatpak --app <app> --source \
   --build-root /run/build/<module> --out native-sources.json
 ```
 

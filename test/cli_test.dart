@@ -1,4 +1,4 @@
-import 'package:native_prebuilt/src/cli.dart';
+import 'package:prebuilt/src/cli.dart';
 import 'package:test/test.dart';
 
 void main() {

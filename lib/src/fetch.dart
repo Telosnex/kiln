@@ -245,7 +245,7 @@ Future<void> _downloadOnce(
   void Function(int received, int? total)? onProgress,
 ) async {
   final request = await client.getUrl(Uri.parse(url));
-  request.headers.set(HttpHeaders.userAgentHeader, 'native_prebuilt/1');
+  request.headers.set(HttpHeaders.userAgentHeader, 'prebuilt/1');
   final response = await request.close();
   if (response.statusCode != HttpStatus.ok) {
     await response.drain<void>();

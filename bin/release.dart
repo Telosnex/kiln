@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:native_prebuilt/src/cli.dart';
-import 'package:native_prebuilt/src/publisher.dart';
-import 'package:native_prebuilt/src/release_tool.dart';
+import 'package:prebuilt/src/cli.dart';
+import 'package:prebuilt/src/publisher.dart';
+import 'package:prebuilt/src/release_tool.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -20,8 +20,8 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addOption('web-runner', defaultsTo: '', help: 'Text for web.json.')
     ..addOption('web-toolchain', defaultsTo: '', help: 'Text for web.json.')
     ..addFlag('dry-run', help: 'Write the manifests, upload nothing.'),
-  'dart run native_prebuilt:release [options] <build output dirs...>\n'
-  'Uploads the files of native_prebuilt:build and writes prebuilt.json, '
+  'dart run prebuilt:release [options] <build output dirs...>\n'
+  'Uploads the files of prebuilt:build and writes prebuilt.json, '
   'and with --web also web.json.',
   (args) async {
     if (args.rest.isEmpty)

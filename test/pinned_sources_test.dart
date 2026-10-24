@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:native_prebuilt/native_prebuilt.dart';
-import 'package:native_prebuilt/src/flatpak.dart';
-import 'package:native_prebuilt/src/hashing.dart';
-import 'package:native_prebuilt/src/pinned_sources.dart';
+import 'package:prebuilt/prebuilt.dart';
+import 'package:prebuilt/src/flatpak.dart';
+import 'package:prebuilt/src/hashing.dart';
+import 'package:prebuilt/src/pinned_sources.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

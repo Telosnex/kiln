@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:native_prebuilt/src/cli.dart';
-import 'package:native_prebuilt/src/flatpak.dart';
+import 'package:prebuilt/src/cli.dart';
+import 'package:prebuilt/src/flatpak.dart';
 
 Future<void> main(List<String> arguments) => runCommand(
   arguments,
@@ -13,7 +13,7 @@ Future<void> main(List<String> arguments) => runCommand(
     ..addFlag(
       'source',
       help:
-          'Build every native_prebuilt package from source with its pinned '
+          'Build every prebuilt package from source with its pinned '
           'sources (writes defaults.json). Default: place prebuilt files.',
     )
     ..addOption(
@@ -28,12 +28,10 @@ Future<void> main(List<String> arguments) => runCommand(
           'The native_prebuilt cache relative to the build directory. The '
           'manifest sets HOME to match.',
     ),
-  'dart run native_prebuilt:flatpak --out sources.json [--source]\n'
+  'dart run prebuilt:flatpak --out sources.json [--source]\n'
   'Writes Flatpak sources so the build hooks run without network.',
   (args) async {
-    final packages = await nativePrebuiltPackages(
-      Directory(args.option('app')!),
-    );
+    final packages = await prebuiltPackages(Directory(args.option('app')!));
     final sources = await flatpakSources(
       packages,
       FlatpakOptions(

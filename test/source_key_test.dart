@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:native_prebuilt/native_prebuilt.dart';
+import 'package:prebuilt/prebuilt.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

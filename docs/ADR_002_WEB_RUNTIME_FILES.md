@@ -1,4 +1,7 @@
 # ADR 002 — Web runtime files built by Actions and installed by the package hook
+
+> The package was named `native_prebuilt` before 0.1.0. File, directory and user define names that contain `native_prebuilt` keep that name.
+
 Status: ACCEPTED (2026-10-12)
 
 This ADR extends ADR 001 to web files. ADR 001 NG2 excluded them. The
@@ -95,8 +98,8 @@ a shipped web file does not match its package commit.
 
 ## 3. Decisions
 
-D1 to D9 and D13 are what native_prebuilt does. D10 is what it recommends to
-a package release workflow; native_prebuilt does not check it. D11 is the
+D1 to D9 and D13 are what prebuilt does. D10 is what it recommends to
+a package release workflow; prebuilt does not check it. D11 is the
 Telosnex adoption plan, with the choices of each package.
 
 ```
@@ -134,20 +137,20 @@ D3: The command `release --web <dir>` adds the web files to the native
     release. It hashes each generated file in <dir>, uploads it to
     native-<key>, and writes native_artifacts/web.json beside prebuilt.json
     in the native-manifest/<tag> branch. The merge of that branch releases
-    native and web files together. native_prebuilt does not build the
+    native and web files together. prebuilt does not build the
     files and does not check how they were built. The runner and toolchain
     fields of web.json are text that the package workflow passes.
     Because: R1, R5
     Instead of: a separate web workflow and branch. Two merges can release
     native and web files from different sources.
-    Instead of: a build command in native_prebuilt that runs a package
+    Instead of: a build command in prebuilt that runs a package
     script. The builds differ: CMake, an FFmpeg configure script, an npm
     tarball. A directory of files is the whole interface.
 
 D4: The hook gets the generated files in one of two modes, set by the user
     define web_build:
     - download (default): it downloads each file from the release in
-      web.json, into the native_prebuilt cache, and verifies its SHA-256.
+      web.json, into the prebuilt cache, and verifies its SHA-256.
       If the web.json source key differs from the local source key, the
       hook fails with a message that names the mismatch.
     - local: it copies the files from the directory in the user define
@@ -173,9 +176,9 @@ D5: The package source key (ADR 001 D3) covers the web build inputs. Each
 D6: web.json lists every installed web file of the package: generated and
     hand-written. For each file it has the path, the SHA-256 and the size.
     It also has the source key, the release and the toolchain.
-    native_prebuilt:check fails if the source key differs from the local key,
+    prebuilt:check fails if the source key differs from the local key,
     or if a hand-written file differs from its entry. Telosnex already runs
-    this check for each package (ADR 001 D10). `native_prebuilt:web stamp`
+    this check for each package (ADR 001 D10). `prebuilt:web stamp`
     updates the hand-written entries. Only the release workflow writes the
     generated entries.
     Because: R5
@@ -201,7 +204,7 @@ D8: Each package loads its web runtime from Dart at first use, from
     Instead of: script tags in the app. Each new or renamed package file
     then needs an app change (§1.4), and fonnx shows the result (§1.3).
 
-D9: Fallback: the command `dart run native_prebuilt:web_install`, run in the
+D9: Fallback: the command `dart run prebuilt:web_install`, run in the
     app, does the same install as the hook, for each dependency that has
     web.json. The hook and the command call one library function. If I4
     fails after a Flutter upgrade, Telosnex adds the command to
@@ -209,7 +212,7 @@ D9: Fallback: the command `dart run native_prebuilt:web_install`, run in the
     Because: R1, R2 if Flutter blocks D1.
     Instead of: a return to generated files in git (R7).
 
-D10: Recommended package release workflow. native_prebuilt checks none of
+D10: Recommended package release workflow. prebuilt checks none of
     this:
     - Build the generated files in the release workflow, not on a
       developer machine (R4).
@@ -218,10 +221,10 @@ D10: Recommended package release workflow. native_prebuilt checks none of
     - Run `web install-dev --from` on the build output, then the package
       browser tests, before `release --web`.
     Because: R4, and risk 1. Only the package knows its build and tests.
-    Instead of: a required toolchain or runner. native_prebuilt receives
+    Instead of: a required toolchain or runner. prebuilt receives
     a directory of files (D3) and cannot see how they were made.
 
-D13: The command `dart run native_prebuilt:web install-dev [--from <dir>]`,
+D13: The command `dart run prebuilt:web install-dev [--from <dir>]`,
     run in a package, installs its web files into its lib/web/ for the
     package's own tests. Without --from, it downloads the generated files
     in web.json and verifies them, as download mode does. With --from, it
@@ -232,7 +235,7 @@ D13: The command `dart run native_prebuilt:web install-dev [--from <dir>]`,
     browser tests.
     Because: R4, R8. A package test cannot use D2, because `dart test -p
     chrome` runs the hook as a host code-asset build (risk 7).
-    Instead of: tool/test_web.sh in each package. native_prebuilt cannot
+    Instead of: tool/test_web.sh in each package. prebuilt cannot
     make a package script install the files first.
     Instead of: a command that also runs `dart test`. The test set is a
     package decision.
@@ -261,14 +264,14 @@ I1: At each commit on the main branch of a package, the web.json source key
     its recorded SHA-256.
     If violated: the hook fails in download mode, or Telosnex ships a web
     runtime that does not match the Dart code of that commit.
-    Pinned by: native_prebuilt:check, on each pull
+    Pinned by: prebuilt:check, on each pull
     request that changes a manifest, once a day on main, and in the Telosnex
     release (ADR 001 D10).
 
 I2: Each generated entry in web.json names a file in the immutable release
     of its source key, with the same SHA-256.
     If violated: the hook fails for every user of that commit.
-    Pinned by: native_prebuilt:check --download, in the
+    Pinned by: prebuilt:check --download, in the
     native-manifest pull request.
 
 I3: Every request that a package makes for a web runtime file has the query
@@ -314,7 +317,7 @@ it, as it excludes `prebuilt.json`.
   downloads `url`, verifies `downloadSha256`, unpacks, and verifies
   `sha256`. Only the release workflow changes the entry.
 - `source: <path>`: a hand-written file at that path in the package.
-  `native_prebuilt:web stamp` changes the entry.
+  `prebuilt:web stamp` changes the entry.
 
 `webVersion`: the first 16 hex of the SHA-256 over the lines
 `<name>\t<sha256>\n`, sorted by name, of all entries in `files`.
@@ -339,11 +342,11 @@ User defines, under `hooks.user_defines.<package>` in the app pubspec:
 Commands of the shared package:
 
 ```
-dart run native_prebuilt:web stamp                    # hand-written entries, webVersion, Dart file
-dart run native_prebuilt:web install-dev [--from <dir>]   # D13, into the package lib/web/
-dart run native_prebuilt:web_install [--web-root <dir>]   # D9 fallback, run in an app
-dart run native_prebuilt:release <dirs…> --web <dir>  # also uploads, writes web.json
-dart run native_prebuilt:check [--download]           # adds I1, and I2 with --download
+dart run prebuilt:web stamp                    # hand-written entries, webVersion, Dart file
+dart run prebuilt:web install-dev [--from <dir>]   # D13, into the package lib/web/
+dart run prebuilt:web_install [--web-root <dir>]   # D9 fallback, run in an app
+dart run prebuilt:release <dirs…> --web <dir>  # also uploads, writes web.json
+dart run prebuilt:check [--download]           # adds I1, and I2 with --download
 ```
 
 Web inputs that the Telosnex packages add to their source key (D5):
@@ -408,7 +411,7 @@ Ranked by irreversibility.
    writes to a web/ directory that the build does not read. Telosnex is not
    a workspace now. The web_root user define (D2) and I4 cover this.
 4. **The first web build downloads all web files.** That is 26 MB for
-   Telosnex, then the native_prebuilt cache holds them (ADR 001). An offline
+   Telosnex, then the prebuilt cache holds them (ADR 001). An offline
    first build fails.
 5. **Web build time in CI.** Measured 2026-10-13, without a cache: the
    image_ffmpeg web build (libaom, FFmpeg, shim) takes 254 s, and the fllama
@@ -432,7 +435,7 @@ Ranked by irreversibility.
    Run the 48 zxing browser tests against the output. Record if `dart test
    -p chrome` runs the package hook (risk 7). Record the job time. Record
    the results in §B.
-2. **Done. native_prebuilt.** Add the web.json model, webVersion, the install
+2. **Done. prebuilt.** Add the web.json model, webVersion, the install
    function (D2, D4), the hook entry point, `web stamp`,
    `web install-dev` (D13), `web_install`, `release --web` and the check
    extension (I1, I2). Add unit tests for webVersion, the app directory
@@ -521,12 +524,12 @@ Ranked by irreversibility.
   installs no web files there (risk 7).
 - 2026-10-12: Added D12 and D13. The web build entry point is
   `tool/build_web.dart`, because a shell script does not run on Windows.
-  `web install-dev` replaces `tool/test_web.sh`: native_prebuilt installs
+  `web install-dev` replaces `tool/test_web.sh`: prebuilt installs
   the files into the package `lib/web/`, and the package selects its own
   tests. Updated D10 with the spike result. Added the rejected
   `prebuilt.json` web section to §A.
-- 2026-10-12: Separated what native_prebuilt does from what it recommends.
-  native_prebuilt receives a directory of built files (D3); the `web build`
+- 2026-10-12: Separated what prebuilt does from what it recommends.
+  prebuilt receives a directory of built files (D3); the `web build`
   command and D12 (`tool/build_web.dart` in each package) are removed. D10
   is now the recommended package workflow: CI build, pinned toolchain,
   browser tests before release. The per-package toolchains moved to D11.
@@ -601,7 +604,7 @@ like the old model.
   ORT was lost. fonnx `6346c92` fixed that. `tool/verify_artifacts.dart`
   failed until a release stamped the changed web files, and it passes from
   release `native-a72173eb4dadd7cb`. `flutter analyze` reported the git
-  dependency on native_prebuilt, so fonnx now has `publish_to: none`.
+  dependency on prebuilt, so fonnx now has `publish_to: none`.
   `tool/test_all.sh` passes in full (fonnx `70da3fc`).
 - **dart2wasm Worker crash: a test server issue.** Under
   `flutter test --platform chrome --wasm`, each fonnx model Worker stopped
@@ -663,7 +666,7 @@ Spain falls mainly on the plane." The old model wrote "The rain and Spain".
 
 #### C.3 Next steps
 
-Do these steps as cleanup after the web path of native_prebuilt is stable
+Do these steps as cleanup after the web path of prebuilt is stable
 for fonnx, image_ffmpeg, and fllama (steps 5 to 7).
 
 1. Make a fonnx export of `openai/whisper-tiny` with the same two-graph

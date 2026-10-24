@@ -75,7 +75,7 @@ Future<WebFileSet> resolveWebFiles({
         await sha256OfFile(file) != entry.sha256) {
       throw StateError(
         '${entry.source} differs from its entry in $webManifestPath. Run '
-        '"dart run native_prebuilt:web stamp" in the package.',
+        '"dart run prebuilt:web stamp" in the package.',
       );
     }
     files[entry.name] = file;
