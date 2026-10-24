@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:yaml/yaml.dart';
 
 import 'defaults.dart';
 import 'manifest.dart' show manifestPath;
@@ -29,6 +30,13 @@ final class FlatpakOptions {
   /// The manifest must set HOME so that the hooks use it
   /// (`home/.cache/kiln` with HOME=<build dir>/home).
   final String cacheDest;
+
+  /// The cache of [tool], next to [cacheDest]. A package that still uses
+  /// native_prebuilt, the old name of kiln, reads its files from
+  /// `home/.cache/native_prebuilt`.
+  String cacheDestFor(String tool) => tool == kilnTool
+      ? cacheDest
+      : p.posix.join(p.posix.dirname(cacheDest), tool);
   final String cargoVendorDest;
   final String cargoHomeDest;
 
@@ -37,11 +45,34 @@ final class FlatpakOptions {
   final String buildRoot;
 }
 
+/// The package name of kiln, and its name before 0.1.0.
+const kilnTool = 'kiln';
+const legacyTool = 'native_prebuilt';
+
 /// A package of the app with prebuilt files.
 final class FlatpakPackage {
-  FlatpakPackage(this.name, this.root);
+  FlatpakPackage(this.name, this.root, {this.tool = kilnTool});
   final String name;
   final Directory root;
+
+  /// The tool that the build hook of the package uses: [kilnTool], or
+  /// [legacyTool] for a package that has not moved to kiln. It sets the
+  /// cache that the hook reads.
+  final String tool;
+}
+
+/// The tool in the dependencies of the package at [root].
+Future<String> _toolOf(Directory root) async {
+  final pubspec = File(p.join(root.path, 'pubspec.yaml'));
+  if (!await pubspec.exists()) return kilnTool;
+  final yaml = loadYaml(await pubspec.readAsString());
+  final dependencies = yaml is Map ? yaml['dependencies'] : null;
+  if (dependencies is Map &&
+      !dependencies.containsKey(kilnTool) &&
+      dependencies.containsKey(legacyTool)) {
+    return legacyTool;
+  }
+  return kilnTool;
 }
 
 /// The packages of the app at [app] that have a prebuilt manifest, from its
@@ -59,7 +90,11 @@ Future<List<FlatpakPackage>> kilnPackages(Directory app) async {
       if (Directory.fromUri(base.resolve(package['rootUri'] as String))
           case final root
           when File(p.join(root.path, p.fromUri(manifestPath))).existsSync())
-        FlatpakPackage(package['name'] as String, root),
+        FlatpakPackage(
+          package['name'] as String,
+          root,
+          tool: await _toolOf(root),
+        ),
   ];
 }
 
@@ -92,7 +127,8 @@ Future<List<Map<String, Object?>>> flatpakSources(
         final all = flatpakArches.keys.every(source.appliesTo);
         if (all && arch != flatpakArches.values.first) continue;
         final dest =
-            '${options.cacheDest}/sources/${source.cacheDirectoryName}';
+            '${options.cacheDestFor(package.tool)}/sources/'
+            '${source.cacheDirectoryName}';
         sources.add({
           if (!all) 'only-arches': [arch],
           if (source.isGit) ...{
@@ -116,16 +152,21 @@ Future<List<Map<String, Object?>>> flatpakSources(
     sources.addAll(await cargoVendorSources(cargoLocks, options));
   }
   if (options.fromSource) {
-    sources.add({
-      'type': 'inline',
-      'dest': options.cacheDest,
-      'dest-filename': defaultsFileName,
-      'contents':
-          '${jsonEncode({
-            'schema': 1,
-            'user_defines': {StandardDefines.nativeBuild: 'source', StandardDefines.hostToolchain: true},
-          })}\n',
-    });
+    // One defaults.json in the cache of each tool that a package uses.
+    final tools = {for (final package in packages) package.tool};
+    if (tools.isEmpty) tools.add(kilnTool);
+    for (final tool in tools) {
+      sources.add({
+        'type': 'inline',
+        'dest': options.cacheDestFor(tool),
+        'dest-filename': defaultsFileName,
+        'contents':
+            '${jsonEncode({
+              'schema': 1,
+              'user_defines': {StandardDefines.nativeBuild: 'source', StandardDefines.hostToolchain: true},
+            })}\n',
+      });
+    }
   }
   return sources;
 }
@@ -158,6 +199,7 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
           )
           as Map<String, Object?>;
   final targets = manifest['targets'] as Map<String, Object?>;
+  final cache = options.cacheDestFor(package.tool);
   final sources = <Map<String, Object?>>[];
   for (final MapEntry(key: target, value: arch) in flatpakArches.entries) {
     final entry = targets[target] as Map<String, Object?>?;
@@ -175,7 +217,7 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
           'only-arches': [arch],
           'url': url,
           'sha256': download,
-          'dest': '${options.cacheDest}/$download',
+          'dest': '$cache/$download',
         });
       } else if (lower.endsWith('.gz')) {
         final sha = file['sha256'] as String;
@@ -194,8 +236,8 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
             'type': 'shell',
             'only-arches': [arch],
             'commands': [
-              'mkdir -p ${options.cacheDest}/$sha && '
-                  'gunzip -c $staged > ${options.cacheDest}/$sha/$name',
+              'mkdir -p $cache/$sha && '
+                  'gunzip -c $staged > $cache/$sha/$name',
             ],
           });
       } else {
@@ -204,7 +246,7 @@ Future<List<Map<String, Object?>>> _prebuiltSources(
           'only-arches': [arch],
           'url': url,
           'sha256': file['sha256'],
-          'dest': '${options.cacheDest}/${file['sha256']}',
+          'dest': '$cache/${file['sha256']}',
           'dest-filename': file['name'],
         });
       }

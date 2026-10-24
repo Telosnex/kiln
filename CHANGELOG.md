@@ -1,3 +1,7 @@
+## 0.1.1
+
+- `kiln:flatpak` places the files of a package that still depends on `native_prebuilt` in the `native_prebuilt` cache, next to the kiln cache, and writes a `defaults.json` for each cache. An app can then use packages of both names during the move to kiln.
+
 ## 0.1.0
 
 - First release on pub.dev. The package was named `native_prebuilt`.

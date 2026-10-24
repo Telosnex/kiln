@@ -44,9 +44,11 @@ Future<void> main(List<String> arguments) => runCommand(
     await File(
       args.option('out')!,
     ).writeAsString('${const JsonEncoder.withIndent('  ').convert(sources)}\n');
-    log(
-      '${sources.length} sources for ${packages.map((p) => p.name).join(', ')}',
-    );
+    final names = [
+      for (final p in packages)
+        p.tool == kilnTool ? p.name : '${p.name} (${p.tool})',
+    ];
+    log('${sources.length} sources for ${names.join(', ')}');
     return 0;
   },
 );
