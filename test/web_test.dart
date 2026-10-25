@@ -331,6 +331,36 @@ void main() {
       );
     });
 
+    test('web_build and web_build_dir from defaults.json', () async {
+      await writeWebManifest(sourceKey: 'f' * 64);
+      final build = await tempDir();
+      await writeFiles(build, {'fake.wasm': 'local wasm'});
+      await File(p.join(cache.path, 'defaults.json')).writeAsString(
+        jsonEncode({
+          'schema': 1,
+          'user_defines': {'web_build': 'local', 'web_build_dir': build.path},
+        }),
+      );
+      final output = await runWeb();
+      expect((await installedFiles())['fake.wasm'], 'local wasm');
+      expect(server.hits, isEmpty);
+      expect(
+        output.dependencies,
+        contains(File(p.join(cache.path, 'defaults.json')).uri),
+      );
+    });
+
+    test('a relative web_build_dir in defaults.json fails', () async {
+      await writeWebManifest();
+      await File(p.join(cache.path, 'defaults.json')).writeAsString(
+        jsonEncode({
+          'schema': 1,
+          'user_defines': {'web_build': 'local', 'web_build_dir': 'build'},
+        }),
+      );
+      await expectLater(runWeb(), throwsFormatException);
+    });
+
     test('local without web_build_dir fails', () async {
       await writeWebManifest();
       await expectLater(

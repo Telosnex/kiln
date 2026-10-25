@@ -234,17 +234,25 @@ final class Kiln {
   ///
   /// Does nothing if the build requests code assets, or if the package has
   /// no web.json and the user define web_build is not local. The user
-  /// defines web_build, web_build_dir and web_root control it.
+  /// defines web_build, web_build_dir and web_root control it. web_build and
+  /// web_build_dir can also come from `<cache root>/defaults.json`, as
+  /// native_build does; a web_build_dir there must be an absolute path.
   Future<void> installWeb() async {
     if (input.config.buildCodeAssets) return;
-    final mode = WebBuildMode.parse(input.userDefines['web_build']);
+    final defaults = await UserDefineDefaults.load(cacheRoot);
+    if (defaults.file case final file?) output.dependencies.add(file.uri);
+    final mode = WebBuildMode.parse(
+      input.userDefines['web_build'] ?? defaults.values['web_build'],
+    );
     final manifestFile = File.fromUri(
       input.packageRoot.resolve(webManifestPath),
     );
     if (mode == WebBuildMode.download && !await manifestFile.exists()) {
       return;
     }
-    final localPath = input.userDefines.path('web_build_dir');
+    final localPath =
+        input.userDefines.path('web_build_dir') ??
+        _absoluteDefault(defaults, 'web_build_dir');
     final set = await resolveWebFiles(
       packageRoot: input.packageRoot,
       manifest: await WebManifest.load(input.packageRoot),
@@ -267,6 +275,18 @@ final class Kiln {
     output.dependencies
       ..addAll(set.dependencies)
       ..addAll(installed.map((f) => f.uri));
+  }
+
+  static Uri? _absoluteDefault(UserDefineDefaults defaults, String name) {
+    final value = defaults.values[name];
+    if (value == null) return null;
+    if (value is! String || !p.isAbsolute(value)) {
+      throw FormatException(
+        '$name in ${defaults.file?.path ?? defaultsFileName} must be an '
+        'absolute path, not "$value".',
+      );
+    }
+    return Directory(value).uri;
   }
 
   Future<void> _publishPrebuilt(PrebuiltTarget prebuilt) async {
