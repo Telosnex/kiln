@@ -1,3 +1,7 @@
+## Unreleased
+
+- The web files: `web_build` and `web_build_dir` can come from `<cache root>/defaults.json`, as `native_build` already could. A build that must not edit the app's pubspec, such as CI, sets the web build mode there. `web_build_dir` there must be an absolute path.
+
 ## 0.1.1
 
 - `kiln:flatpak` places the files of a package that still depends on `native_prebuilt` in the `native_prebuilt` cache, next to the kiln cache, and writes a `defaults.json` for each cache. An app can then use packages of both names during the move to kiln.
