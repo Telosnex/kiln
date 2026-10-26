@@ -1,6 +1,6 @@
 name: kiln
 description: Prebuilt native libraries and web runtime files for Dart build hooks, built by the same hook code that builds from source.
-version: 0.1.1
+version: 0.1.2
 repository: https://github.com/Telosnex/kiln
 
 environment:

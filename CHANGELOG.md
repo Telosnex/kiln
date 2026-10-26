@@ -1,4 +1,4 @@
-## Unreleased
+## 0.1.2
 
 - The web files: `web_build` and `web_build_dir` can come from `<cache root>/defaults.json`, as `native_build` already could. A build that must not edit the app's pubspec, such as CI, sets the web build mode there. `web_build_dir` there must be an absolute path.
 
