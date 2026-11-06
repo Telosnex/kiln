@@ -91,8 +91,36 @@ Future<File> fetchVerified(
   void Function(String message)? log,
   void Function(int received, int? total)? onProgress,
   int attempts = 3,
-}) async {
+}) {
   final encoding = _encodingOf(spec);
+  // One fetch per destination at a time, across processes too: on Windows a
+  // file cannot be opened to check it while another fetch renames it into
+  // place.
+  return withFileLock(
+    File('${destination.path}.lock'),
+    () => _fetchVerified(
+      spec,
+      encoding,
+      destination,
+      client: client,
+      archiveCache: archiveCache,
+      log: log,
+      onProgress: onProgress,
+      attempts: attempts,
+    ),
+  );
+}
+
+Future<File> _fetchVerified(
+  FetchSpec spec,
+  _Encoding encoding,
+  File destination, {
+  required HttpClient? client,
+  required Directory? archiveCache,
+  required void Function(String message)? log,
+  required void Function(int received, int? total)? onProgress,
+  required int attempts,
+}) async {
   if (await destination.exists()) {
     if (await sha256OfFile(destination) == spec.sha256) return destination;
     log?.call(

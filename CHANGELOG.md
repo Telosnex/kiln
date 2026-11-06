@@ -2,6 +2,7 @@
 
 - Requires `code_assets` 2.2 and `hooks` 2.2. These are the versions that current `objective_c`, `native_toolchain_c` and `shared_preferences_foundation` need. A package that pins `code_assets` 1.x cannot be installed with them.
 - `hooks` 2.2 reads an absolute Windows path in a user define (`kiln_cache`, `web_build_dir`, `web_root`) correctly. Earlier versions read the drive letter as a URI scheme.
+- Concurrent fetches of one file, in one process or several, take turns. On Windows, a check of the file could fail while another fetch renamed it into place.
 - The OS check compares the complete iOS and macOS deployment version (`deploymentVersion`), not only the major version.
 - Breaking: `PrebuiltTarget.minOSVersion` and the `macOSVersion` and `iOSVersion` parameters of `buildTarget` and `runHook` are an `OSVersion`. In `prebuilt.json`, a whole version stays an int, and a version such as 12.3 is the string `"12.3"`. Existing manifests do not change. `kiln:build --macos-version` and `--ios-version` accept a minor version.
 
