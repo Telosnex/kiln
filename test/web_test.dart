@@ -185,12 +185,11 @@ void main() {
   });
 
   test('findAppRoot is the parent of .dart_tool', () {
-    expect(
-      findAppRoot(
-        Uri.directory('/a/app/.dart_tool/hooks_runner/shared/x/build/'),
-      ).path,
-      Directory('/a/app/').path,
-    );
+    // p.equals: on Windows the path uses backslashes.
+    final root = findAppRoot(
+      Uri.directory('/a/app/.dart_tool/hooks_runner/shared/x/build/'),
+    ).path;
+    expect(p.equals(root, '/a/app'), isTrue, reason: root);
     expect(() => findAppRoot(Uri.directory('/tmp/x/')), throwsStateError);
   });
 
