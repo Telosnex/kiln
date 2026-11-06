@@ -67,5 +67,40 @@ void main() {
     rejects((j) => file(j, 1)['asset'] = 'x', 'runtime with asset');
     rejects((j) => file(j, 1)['name'] = 'fllama.dll', 'duplicate name');
     rejects((j) => file(j, 0)['sha256'] = 'A' * 64, 'uppercase hex');
+    for (final bad in [true, -1, '12.x', '1.2.3.4', '']) {
+      rejects((j) => target(j)['minOSVersion'] = bad, 'minOSVersion $bad');
+    }
+  });
+
+  test('minOSVersion: an int, or a string with a minor version', () {
+    for (final (json, version) in [
+      (12, const OSVersion(12)),
+      ('12.3', const OSVersion(12, 3)),
+      ('12.3.1', const OSVersion(12, 3, 1)),
+      ('13.0', const OSVersion(13)),
+    ]) {
+      final manifest = PrebuiltManifest.fromJson(
+        manifestJson()
+          ..['targets'] = {
+            'macos-arm64': {...target(manifestJson()), 'minOSVersion': json},
+          },
+      );
+      final read = manifest.targets['macos-arm64']!.minOSVersion;
+      expect(read, version);
+      // A whole version stays an int, as kiln 0.1 wrote and reads it.
+      expect(read!.toJson(), version.minor == 0 ? version.major : '$version');
+    }
+  });
+
+  test('OSVersion order and text', () {
+    expect(const OSVersion(12, 3) < const OSVersion(12, 10), isTrue);
+    expect(const OSVersion(12, 9, 9) < const OSVersion(13), isTrue);
+    expect(const OSVersion(13) < const OSVersion(13), isFalse);
+    expect(OSVersion.parse('14'), const OSVersion(14));
+    expect('${const OSVersion(14, 0, 1)}', '14.0.1');
+    expect('${const OSVersion(14, 2)}', '14.2');
   });
 }
+
+Map<String, Object?> target(Map<String, Object?> json) =>
+    (json['targets'] as Map)['windows-x64'] as Map<String, Object?>;

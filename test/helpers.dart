@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
+import 'package:kiln/kiln.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -98,7 +99,7 @@ Future<BuildInput> buildInput(
   Directory packageRoot, {
   OS os = OS.macOS,
   Architecture architecture = Architecture.arm64,
-  int macOSVersion = 12,
+  OSVersion macOSVersion = const OSVersion(12),
   Map<String, Object> defines = const {},
 }) async {
   final work = await tempDir();
@@ -121,9 +122,14 @@ Future<BuildInput> buildInput(
     linkModePreference: LinkModePreference.dynamic,
     targetArchitecture: architecture,
     targetOS: os,
-    macOS: os == OS.macOS ? MacOSCodeConfig(targetVersion: macOSVersion) : null,
+    macOS: os == OS.macOS
+        ? MacOSCodeConfig(deploymentVersion: macOSVersion.toApple())
+        : null,
     iOS: os == OS.iOS
-        ? IOSCodeConfig(targetSdk: IOSSdk.iPhoneOS, targetVersion: 13)
+        ? IOSCodeConfig(
+            targetSdk: IOSSdk.iPhoneOS,
+            deploymentVersion: AppleVersion(13),
+          )
         : null,
     android: os == OS.android ? AndroidCodeConfig(targetNdkApi: 24) : null,
   ).setupBuildInput(builder);

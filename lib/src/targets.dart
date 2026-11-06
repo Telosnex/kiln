@@ -62,21 +62,86 @@ final class TargetName {
   int get hashCode => name.hashCode;
 }
 
+/// An oldest supported OS version: an iOS or macOS deployment version
+/// (major.minor.patch), or an Android API level (major only).
+final class OSVersion implements Comparable<OSVersion> {
+  const OSVersion(this.major, [this.minor = 0, this.patch = 0]);
+
+  factory OSVersion.apple(AppleVersion version) =>
+      OSVersion(version.major, version.minor, version.patch);
+
+  /// Parses `12`, `12.3` or `12.3.1`.
+  factory OSVersion.parse(String text) {
+    final parts = text.split('.');
+    final numbers = parts.map(int.tryParse).toList();
+    if (parts.length > 3 || numbers.any((n) => n == null || n < 0)) {
+      throw FormatException('Invalid OS version "$text".');
+    }
+    return OSVersion(
+      numbers[0]!,
+      numbers.length > 1 ? numbers[1]! : 0,
+      numbers.length > 2 ? numbers[2]! : 0,
+    );
+  }
+
+  /// Reads an int (a whole version) or a string such as `"12.3"`.
+  factory OSVersion.fromJson(Object? json, String where) => switch (json) {
+    final int major when major >= 0 => OSVersion(major),
+    final String text => OSVersion.parse(text),
+    _ => throw FormatException(
+      '$where must be an int or a version string such as "12.3".',
+    ),
+  };
+
+  final int major;
+  final int minor;
+  final int patch;
+
+  AppleVersion toApple() => AppleVersion(major, minor: minor, patch: patch);
+
+  /// An int for a whole version, as manifests before kiln 0.2 have.
+  Object toJson() => minor == 0 && patch == 0 ? major : toString();
+
+  @override
+  int compareTo(OSVersion other) => major != other.major
+      ? major.compareTo(other.major)
+      : minor != other.minor
+      ? minor.compareTo(other.minor)
+      : patch.compareTo(other.patch);
+
+  bool operator <(OSVersion other) => compareTo(other) < 0;
+
+  @override
+  bool operator ==(Object other) => other is OSVersion && compareTo(other) == 0;
+
+  @override
+  int get hashCode => Object.hash(major, minor, patch);
+
+  @override
+  String toString() => [
+    major,
+    if (minor != 0 || patch != 0) minor,
+    if (patch != 0) patch,
+  ].join('.');
+}
+
 /// Why prebuilt files with [minOSVersion] cannot serve [code], or null if
 /// they can.
-String? compatibilityProblem(CodeConfig code, int? minOSVersion) {
+String? compatibilityProblem(CodeConfig code, OSVersion? minOSVersion) {
   if (code.linkModePreference == LinkModePreference.static) {
     return 'the build asks for static linking, and prebuilt files are '
         'dynamic libraries';
   }
   if (minOSVersion == null) return null;
   final (label, version) = switch (code.targetOS) {
-    OS.iOS => ('iOS', code.iOS.targetVersion),
-    OS.macOS => ('macOS', code.macOS.targetVersion),
-    OS.android => ('Android API', code.android.targetNdkApi),
+    OS.iOS => ('iOS', OSVersion.apple(code.iOS.deploymentVersion)),
+    OS.macOS => ('macOS', OSVersion.apple(code.macOS.deploymentVersion)),
+    OS.android => ('Android API', OSVersion(code.android.targetNdkApi)),
     _ => (null, null),
   };
-  if (label == null || version == null || version >= minOSVersion) return null;
+  if (label == null || version == null || !(version < minOSVersion)) {
+    return null;
+  }
   return 'the app supports $label $version, and the prebuilt files need '
       '$label $minOSVersion or later';
 }

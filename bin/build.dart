@@ -24,8 +24,16 @@ Future<void> main(List<String> arguments) => runCommand(
           '(an object, a number) is decoded.',
       splitCommas: false,
     )
-    ..addOption('macos-version', defaultsTo: '$defaultMacOSVersion')
-    ..addOption('ios-version', defaultsTo: '$defaultIOSVersion')
+    ..addOption(
+      'macos-version',
+      defaultsTo: '$defaultMacOSVersion',
+      help: 'For example 12 or 12.3.',
+    )
+    ..addOption(
+      'ios-version',
+      defaultsTo: '$defaultIOSVersion',
+      help: 'For example 13 or 13.4.',
+    )
     ..addOption('android-api', defaultsTo: '$defaultAndroidApi'),
   'dart run kiln:build --target <target> --out <dir>\n'
   'Runs hook/build.dart with native_build: source and native_release.',
@@ -42,8 +50,8 @@ Future<void> main(List<String> arguments) => runCommand(
       userDefines: {
         for (final define in args.multiOption('define')) ...parseDefine(define),
       },
-      macOSVersion: int.parse(args.option('macos-version')!),
-      iOSVersion: int.parse(args.option('ios-version')!),
+      macOSVersion: OSVersion.parse(args.option('macos-version')!),
+      iOSVersion: OSVersion.parse(args.option('ios-version')!),
       androidApi: int.parse(args.option('android-api')!),
       log: log,
     );

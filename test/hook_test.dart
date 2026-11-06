@@ -25,7 +25,10 @@ void main() {
     cache = await tempDir();
   });
 
-  Future<void> writeManifest({String? sourceKey, int minOSVersion = 12}) async {
+  Future<void> writeManifest({
+    String? sourceKey,
+    OSVersion minOSVersion = const OSVersion(12),
+  }) async {
     final key = sourceKey ?? (await computeSourceKey(package.uri)).key;
     await PrebuiltManifest(
       sourceKey: key,
@@ -62,7 +65,7 @@ void main() {
   /// ran.
   Future<(BuildOutput, bool, PrebuiltRelease?)> run({
     Map<String, Object> defines = const {},
-    int macOSVersion = 12,
+    OSVersion macOSVersion = const OSVersion(12),
     Object? sourceError,
   }) async {
     final input = await buildInput(
@@ -135,9 +138,19 @@ void main() {
   });
 
   test('auto: an app with an older OS builds from source', () async {
-    await writeManifest(minOSVersion: 13);
-    final (_, built, _) = await run(macOSVersion: 12);
+    await writeManifest(minOSVersion: const OSVersion(13));
+    final (_, built, _) = await run(macOSVersion: const OSVersion(12));
     expect(built, isTrue);
+  });
+
+  test('auto: the check compares the minor version', () async {
+    await writeManifest(minOSVersion: const OSVersion(12, 3));
+    final (_, older, _) = await run(macOSVersion: const OSVersion(12, 2, 9));
+    expect(older, isTrue);
+    final (_, same, _) = await run(macOSVersion: const OSVersion(12, 3));
+    expect(same, isFalse);
+    final (_, newer, _) = await run(macOSVersion: const OSVersion(13));
+    expect(newer, isFalse);
   });
 
   test('download: a source change fails', () async {

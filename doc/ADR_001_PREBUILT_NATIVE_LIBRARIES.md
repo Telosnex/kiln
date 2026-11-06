@@ -334,9 +334,10 @@ Manifest: `native_artifacts/prebuilt.json` in each package.
 - `asset`: the code asset name of a bundle file, without
   `package:<package>/`. The hook publishes the download under this name
   (I5).
-- `minOSVersion`: per target, for iOS and macOS (major version) and Android
-  (API level). In mode auto, an app that supports an older OS builds from
-  source. Release builds use iOS 15, macOS 12 and Android API 24, the values
+- `minOSVersion`: per target, for iOS and macOS (deployment version) and
+  Android (API level). A whole version is an int, such as `12`; a version
+  with a minor or patch part is a string, such as `"12.3"`. In mode auto, an
+  app that supports an older OS builds from source. Release builds use iOS 15, macOS 12 and Android API 24, the values
   of the Flutter app template.
 - A manifest without a target means: no prebuilt files for that target.
 

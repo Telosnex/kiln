@@ -143,7 +143,7 @@ void main() {
             as Map;
     final key = await computeSourceKey(package.uri);
     expect(description['sourceKey'], key.key);
-    expect(description['minOSVersion'], defaultMacOSVersion);
+    expect(description['minOSVersion'], 12);
     final files = (description['files'] as List).cast<Map>();
     expect(files.map((f) => f['name']), ['libfake.dylib', 'pack.bin']);
     expect(files.first['asset'], 'fake.dart');
@@ -217,7 +217,7 @@ void main() {
         publisher: publisher,
         assetUrl: (tag, asset) => server.url('$tag/$asset'),
       );
-      expect(manifest.targets[ios.name]!.minOSVersion, 13);
+      expect(manifest.targets[ios.name]!.minOSVersion, const OSVersion(13));
       final released = await File(
         p.join(out.path, 'libfake.dylib'),
       ).readAsString();
@@ -230,7 +230,7 @@ void main() {
           packageRoot: package.uri,
           packageName: 'fake_native',
           target: ios,
-          iOSVersion: 13,
+          iOSVersion: const OSVersion(13),
           defines: {'native_build': mode, 'kiln_cache': cache.path},
         );
         expect(

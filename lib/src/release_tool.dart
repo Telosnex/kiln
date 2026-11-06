@@ -25,7 +25,7 @@ const targetDescriptionName = 'target.json';
 const runtimeDartPath = 'lib/src/kiln.g.dart';
 
 /// Oldest macOS version of release builds.
-const defaultMacOSVersion = 12;
+const defaultMacOSVersion = OSVersion(12);
 
 /// Oldest iOS version of release builds.
 ///
@@ -39,7 +39,7 @@ const defaultMacOSVersion = 12;
 /// in mode auto, or fails in mode download. Release builds use 13 so Flutter
 /// can use the prebuilt files. `--ios-version` overrides this default for a
 /// package that needs a newer OS.
-const defaultIOSVersion = 13;
+const defaultIOSVersion = OSVersion(13);
 
 /// Oldest Android API level of release builds.
 const defaultAndroidApi = 24;
@@ -70,8 +70,8 @@ Future<void> buildTarget({
   required String runner,
   String toolchain = '',
   Map<String, Object> userDefines = const {},
-  int macOSVersion = defaultMacOSVersion,
-  int iOSVersion = defaultIOSVersion,
+  OSVersion macOSVersion = defaultMacOSVersion,
+  OSVersion iOSVersion = defaultIOSVersion,
   int androidApi = defaultAndroidApi,
   String? dartExecutable,
   Log? log,
@@ -160,8 +160,8 @@ Future<void> buildTarget({
     'runner': runner,
     'toolchain': toolchain,
     'minOSVersion': ?switch (os) {
-      OS.macOS => macOSVersion,
-      OS.iOS => iOSVersion,
+      OS.macOS => macOSVersion.toJson(),
+      OS.iOS => iOSVersion.toJson(),
       OS.android => androidApi,
       _ => null,
     },
@@ -180,8 +180,8 @@ Future<(BuildInput, BuildOutput)> runHook({
   required String packageName,
   required TargetName target,
   Map<String, Object> defines = const {},
-  int macOSVersion = defaultMacOSVersion,
-  int iOSVersion = defaultIOSVersion,
+  OSVersion macOSVersion = defaultMacOSVersion,
+  OSVersion iOSVersion = defaultIOSVersion,
   int androidApi = defaultAndroidApi,
   String? dartExecutable,
   Log? log,
@@ -209,21 +209,20 @@ Future<(BuildInput, BuildOutput)> runHook({
     linkModePreference: LinkModePreference.dynamic,
     targetArchitecture: target.architecture,
     targetOS: os,
-    macOS: os == OS.macOS ? MacOSCodeConfig(targetVersion: macOSVersion) : null,
+    macOS: os == OS.macOS
+        ? MacOSCodeConfig(deploymentVersion: macOSVersion.toApple())
+        : null,
     iOS: os == OS.iOS
-        ? IOSCodeConfig(targetSdk: target.iosSdk!, targetVersion: iOSVersion)
+        ? IOSCodeConfig(
+            targetSdk: target.iosSdk!,
+            deploymentVersion: iOSVersion.toApple(),
+          )
         : null,
     android: os == OS.android
         ? AndroidCodeConfig(targetNdkApi: androidApi)
         : null,
   );
-  try {
-    // hooks 2.2 and later: the runner must set a logger first.
-    // ignore: avoid_dynamic_calls
-    (extension as dynamic).setupLogger(Logger('kiln'));
-  } on NoSuchMethodError {
-    // hooks before 2.2 has no setupLogger.
-  }
+  extension.setupLogger(Logger('kiln'));
   extension.setupBuildInput(builder);
   final input = builder.build();
   final inputFile = File.fromUri(work.uri.resolve('input.json'));
@@ -381,7 +380,9 @@ Future<PrebuiltManifest> releaseTargets({
     targets[target] = PrebuiltTarget(
       runner: d['runner'] as String,
       toolchain: d['toolchain'] as String,
-      minOSVersion: d['minOSVersion'] as int?,
+      minOSVersion: d['minOSVersion'] == null
+          ? null
+          : OSVersion.fromJson(d['minOSVersion'], '$target minOSVersion'),
       files: files,
     );
   }

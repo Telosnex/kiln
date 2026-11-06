@@ -136,8 +136,7 @@ final class PrebuiltTarget {
       toolchain: reader.string('toolchain'),
       minOSVersion: switch (json['minOSVersion']) {
         null => null,
-        final int value => value,
-        _ => throw FormatException('$where: "minOSVersion" must be an int.'),
+        final value => OSVersion.fromJson(value, '$where: "minOSVersion"'),
       },
       files: [
         for (var i = 0; i < files.length; i++)
@@ -157,15 +156,15 @@ final class PrebuiltTarget {
   /// Free text: compiler and SDK versions.
   final String toolchain;
 
-  /// Oldest OS version the files support: iOS and macOS major version, or
-  /// Android API level. Null for Linux and Windows.
-  final int? minOSVersion;
+  /// Oldest OS version the files support: iOS or macOS deployment version,
+  /// or Android API level. Null for Linux and Windows.
+  final OSVersion? minOSVersion;
   final List<PrebuiltFile> files;
 
   Map<String, Object?> toJson() => {
     'runner': runner,
     'toolchain': toolchain,
-    if (minOSVersion != null) 'minOSVersion': minOSVersion,
+    if (minOSVersion != null) 'minOSVersion': minOSVersion!.toJson(),
     'files': [for (final file in files) file.toJson()],
   };
 }
