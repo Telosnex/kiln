@@ -95,9 +95,16 @@ Future<File> fetchVerified(
   final encoding = _encodingOf(spec);
   // One fetch per destination at a time, across processes too: on Windows a
   // file cannot be opened to check it while another fetch renames it into
-  // place.
+  // place. The lock file is in the system temp directory, so that nothing is
+  // added to the destination's directory, which can be an asset directory.
   return withFileLock(
-    File('${destination.path}.lock'),
+    File(
+      p.join(
+        Directory.systemTemp.path,
+        'kiln_locks',
+        'fetch-${sha256OfString(destination.absolute.path).substring(0, 16)}.lock',
+      ),
+    ),
     () => _fetchVerified(
       spec,
       encoding,

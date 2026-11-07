@@ -184,6 +184,8 @@ void main() {
     ]);
     expect(await destination.readAsBytes(), content);
     expect(leftovers(), isEmpty);
+    // No lock file or other file next to the destination.
+    expect(dir.listSync().map((e) => p.basename(e.path)), ['lib.so']);
   });
 
   test('ensureRuntimeFile reports progress and writes <dir>/<name>', () async {

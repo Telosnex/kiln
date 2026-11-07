@@ -1,3 +1,7 @@
+## 0.2.1
+
+- A fetch keeps its lock file in the system temp directory. 0.2.0 left `<file>.lock` next to each fetched file, so it could end up in an app's assets or fail a check of a directory's exact contents.
+
 ## 0.2.0
 
 - Requires `code_assets` 2.2 and `hooks` 2.2. These are the versions that current `objective_c`, `native_toolchain_c` and `shared_preferences_foundation` need. A package that pins `code_assets` 1.x cannot be installed with them.
