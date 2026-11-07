@@ -361,10 +361,17 @@ Excluded:
 
 ```
 top level:   any name that starts with "."   *.md   pubspec.lock
-             build/  docs/  example/  integration_test/  lib/  test/
-             native_artifacts/prebuilt.json
+             LICENSE  NOTICES
+             build/  doc/  docs/  example/  integration_test/  lib/  test/
+             native_artifacts/prebuilt.json  native_artifacts/web.json
 any depth:   .git/  .dart_tool/
 ```
+
+`pubspec.yaml` is in the key without its top-level `version` and
+`description` fields, with LF line endings. A field ends at the next
+non-blank line that starts in column 0. A release that changes only the
+version, the description or the docs uses the native files of the
+previous release.
 
 A package adds excludes in `native_artifacts/source_excludes.txt`, one per
 line, with the same syntax (`dir/` or an exact path). That file is in the
@@ -710,3 +717,7 @@ manifest does not match its sources.
 - 2026-10-12: Moved from fllama `docs/ADR_005_PREBUILT_NATIVE_LIBRARIES.md`
   and renumbered ADR 001. References to fllama ADRs name fllama. NG2
   points to ADR 002.
+- 2026-11-06: The source key leaves out the `version` and `description`
+  of `pubspec.yaml`, and `NOTICES`. The exclude list names `doc/` and
+  `native_artifacts/web.json`, which the code already excluded. Every key
+  changes, so each package needs one new release (kiln 1.0.0).

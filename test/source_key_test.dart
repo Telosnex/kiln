@@ -58,11 +58,52 @@ void main() {
     await writeFiles(root, {
       'README.md': 'changed',
       'LICENSE': 'changed',
+      'NOTICES': 'changed',
       'lib/fake_native.dart': '// changed',
       'native_artifacts/prebuilt.json': '{"changed": true}',
       '.gitignore': 'x',
     });
     expect(await keyOf(root), before);
+  });
+
+  test('the version and description of the pubspec keep the key', () async {
+    final root = await fakePackage();
+    final pubspec = File(p.join(root.path, 'pubspec.yaml'));
+    final original = await pubspec.readAsString();
+    await pubspec.writeAsString(
+      'version: 0.1.0\ndescription: >-\n  One.\n  Two.\n$original',
+    );
+    final before = await keyOf(root);
+    await pubspec.writeAsString(
+      'version: 1.0.0\r\ndescription: Other text.\r\n'
+      '${original.replaceAll('\n', '\r\n')}',
+    );
+    expect(await keyOf(root), before);
+    await pubspec.writeAsString(
+      'version: 1.0.0\ndescription: Other text.\n$original'
+      'dependencies:\n  x: any\n',
+    );
+    expect(await keyOf(root), isNot(before));
+  });
+
+  test('pubspecKeyText drops only the top-level version and description', () {
+    expect(
+      pubspecKeyText(
+        'name: a\n'
+        'description: >-\n'
+        '  long\n'
+        '\n'
+        '  text\n'
+        'version: 1.0.0\n'
+        'versioned: x\n'
+        'dependencies:\n'
+        '  version: any\n',
+      ),
+      'name: a\n'
+      'versioned: x\n'
+      'dependencies:\n'
+      '  version: any\n',
+    );
   });
 
   test('source_excludes.txt adds excludes and is itself covered', () async {

@@ -25,10 +25,33 @@ const defaultSourceExcludes = [
   'native_artifacts/prebuilt.json',
   'native_artifacts/web.json',
   'pubspec.lock',
-  // The package LICENSE holds the notices of the native code too, in the
-  // Flutter multi-license format. A notice change needs no new release.
+  // License texts. A notice change needs no new release.
   'LICENSE',
+  'NOTICES',
 ];
+
+/// Top-level `pubspec.yaml` fields that do not change the source key.
+///
+/// A release that changes only these needs no new native build.
+const pubspecKeyExcludedFields = ['version', 'description'];
+
+/// The `pubspec.yaml` text that the source key hashes: [text] with LF line
+/// endings and without the [pubspecKeyExcludedFields]. A field ends at the
+/// next line that starts in column 0 and is not blank.
+String pubspecKeyText(String text) {
+  final kept = <String>[];
+  var skipping = false;
+  for (final line in text.replaceAll('\r\n', '\n').split('\n')) {
+    final topLevel = line.isNotEmpty && !line.startsWith(RegExp(r'\s'));
+    if (topLevel) {
+      skipping = pubspecKeyExcludedFields.any(
+        (field) => RegExp('^${RegExp.escape(field)}\\s*:').hasMatch(line),
+      );
+    }
+    if (!skipping) kept.add(line);
+  }
+  return kept.join('\n');
+}
 
 /// A file that the source key covers.
 final class SourceFile {
@@ -106,15 +129,15 @@ Future<SourceKey> computeSourceKey(
   final files = <SourceFile>[];
   for (final path in sorted) {
     final full = p.join(root, p.fromUri(path));
-    files.add(
-      SourceFile(
-        path,
-        crlf.contains(path)
-            ? sha256OfBytes(_lf(await File(full).readAsBytes()))
-            : await _hashEntry(full, memo, path),
-        File(full).uri,
-      ),
-    );
+    final String digest;
+    if (path == 'pubspec.yaml' && !FileSystemEntity.isLinkSync(full)) {
+      digest = sha256OfString(pubspecKeyText(await File(full).readAsString()));
+    } else if (crlf.contains(path)) {
+      digest = sha256OfBytes(_lf(await File(full).readAsBytes()));
+    } else {
+      digest = await _hashEntry(full, memo, path);
+    }
+    files.add(SourceFile(path, digest, File(full).uri));
   }
   await memo?.save();
   final listing = files.map((f) => '${f.path}\t${f.sha256}\n').join();

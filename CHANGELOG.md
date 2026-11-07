@@ -1,3 +1,7 @@
+## 1.0.0
+
+- The source key leaves out the `version` and `description` fields of `pubspec.yaml`, and the `NOTICES` file. A release that changes only these, or docs, needs no new native build. Every source key changes, so each package needs one new native release with kiln 1.0.0.
+
 ## 0.2.2
 
 - The `kiln.g.dart` of `runtime_release` turns `dart format` off. The formatter wraps its long URLs up to language version 3.12 and not from 3.13, so pub.dev's analysis of a package found the file unformatted.
