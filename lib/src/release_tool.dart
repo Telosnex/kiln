@@ -245,8 +245,9 @@ Future<(BuildInput, BuildOutput)> runHook({
       mode: ProcessStartMode.inheritStdio,
     );
     final exitCode = await process.exitCode;
-    if (exitCode != 0)
+    if (exitCode != 0) {
       throw StateError('$what failed with exit code $exitCode.');
+    }
   }
 
   log?.call('Compiling hook/build.dart');
@@ -676,6 +677,11 @@ Future<RuntimeFileSet> runtimeRelease({
 }
 
 /// The Dart source of [runtimeDartPath].
+///
+/// `dart format` leaves the file as it is. A long URL is on one line, and the
+/// formatter would wrap it or not depending on the package's language version,
+/// so the file turns the formatter off. A package's format check and pub.dev's
+/// analysis then accept the file with every language version.
 String runtimeFilesDart(RuntimeFileSet set) {
   String literal(String value) =>
       "'${value.replaceAll(r'\', r'\\').replaceAll("'", r"\'").replaceAll(r'$', r'\$')}'";
@@ -684,6 +690,8 @@ String runtimeFilesDart(RuntimeFileSet set) {
     ..writeln('// Release: ${set.release}')
     ..writeln()
     ..writeln("import 'package:kiln/runtime.dart';")
+    ..writeln()
+    ..writeln('// dart format off')
     ..writeln()
     ..writeln('/// Runtime files of this package, by file name.')
     ..writeln('const prebuiltRuntimeFiles = <String, RuntimeFile>{');

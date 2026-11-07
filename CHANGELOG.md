@@ -1,3 +1,8 @@
+## 0.2.2
+
+- The `kiln.g.dart` of `runtime_release` turns `dart format` off. The formatter wraps its long URLs up to language version 3.12 and not from 3.13, so pub.dev's analysis of a package found the file unformatted.
+- Usage example for pub.dev, and the code passes the recommended lints.
+
 ## 0.2.1
 
 - A fetch keeps its lock file in the system temp directory. 0.2.0 left `<file>.lock` next to each fetched file, so it could end up in an app's assets or fail a check of a directory's exact contents.

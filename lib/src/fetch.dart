@@ -195,8 +195,9 @@ Future<File> _fetchVerified(
                 if (await archive.exists()) await archive.delete();
                 await archivePartial.rename(archive.path);
               } finally {
-                if (await archivePartial.exists())
+                if (await archivePartial.exists()) {
                   await archivePartial.delete();
+                }
               }
             },
           );

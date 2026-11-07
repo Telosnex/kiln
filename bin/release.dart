@@ -24,8 +24,9 @@ Future<void> main(List<String> arguments) => runCommand(
   'Uploads the files of kiln:build and writes prebuilt.json, '
   'and with --web also web.json.',
   (args) async {
-    if (args.rest.isEmpty)
+    if (args.rest.isEmpty) {
       throw StateError('Pass the build output directories.');
+    }
     await releaseTargets(
       packageRoot: packageRootOf(args),
       targetDirectories: args.rest.map(Directory.new).toList(),

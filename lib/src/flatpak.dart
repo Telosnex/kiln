@@ -28,7 +28,7 @@ final class FlatpakOptions {
 
   /// The kiln cache, relative to the module's build directory.
   /// The manifest must set HOME so that the hooks use it
-  /// (`home/.cache/kiln` with HOME=<build dir>/home).
+  /// (`home/.cache/kiln` with `HOME=<build dir>/home`).
   final String cacheDest;
 
   /// The cache of [tool], next to [cacheDest]. A package that still uses
@@ -266,8 +266,9 @@ Future<List<Map<String, Object?>>> cargoVendorSources(
   final crates = <String, CargoPackage>{};
   for (final lock in locks) {
     for (final pkg in parseCargoLock(await lock.readAsString())) {
-      if (pkg.source != null)
+      if (pkg.source != null) {
         crates['${pkg.name}-${pkg.version}-${pkg.source}'] = pkg;
+      }
     }
   }
   final vendor = options.cargoVendorDest;

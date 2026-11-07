@@ -9,7 +9,7 @@ import 'source_key.dart';
 import 'web_install.dart';
 import 'web_manifest.dart';
 
-typedef _Log = void Function(String message);
+typedef WebLog = void Function(String message);
 
 /// `web stamp` (ADR 002 D6): updates the hand-written entries of web.json
 /// from the package files, adds [add] and removes [remove], then writes
@@ -20,7 +20,7 @@ Future<WebManifest> stampWeb({
   required Uri packageRoot,
   Map<String, String> add = const {},
   Set<String> remove = const {},
-  _Log? log,
+  WebLog? log,
 }) async {
   final previous = await WebManifest.load(packageRoot, checkVersion: false);
   final known = {for (final f in previous?.files ?? <WebFile>[]) f.name: f};
@@ -182,7 +182,7 @@ Future<WebFileSet> installDev({
   Directory? from,
   Directory? cacheRoot,
   HttpClient? client,
-  _Log? log,
+  WebLog? log,
 }) async {
   final set = await resolveWebFiles(
     packageRoot: packageRoot,
@@ -206,7 +206,7 @@ Future<List<String>> webInstallApp({
   Map<String, Directory> local = const {},
   Directory? cacheRoot,
   HttpClient? client,
-  _Log? log,
+  WebLog? log,
 }) async {
   final config = _findPackageConfig(appRoot);
   final json = jsonDecode(await config.readAsString());
