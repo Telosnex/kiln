@@ -48,12 +48,6 @@ jobs:
     timeout-minutes: 20
     steps: *desktop_steps
 
-  desktop-macos-x64:
-    name: macOS x64
-    runs-on: macos-15-intel
-    timeout-minutes: 20
-    steps: *desktop_steps
-
   desktop-windows-x64:
     name: Windows x64
     runs-on: windows-2025
